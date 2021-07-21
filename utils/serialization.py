@@ -6,7 +6,10 @@ code_to_msg = {
     403: "Forbidden",
     404: "Not Found",
     405: "Method Not Allowed",
-    500: "Fail"
+    500: "Fail",
+    50000: "Token Error",
+    50001: "Token Expiration",
+
 }
 
 

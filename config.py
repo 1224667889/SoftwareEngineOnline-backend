@@ -1,7 +1,7 @@
 dbConfig = {
     'host': 'localhost',
-    'user': 'software',
-    'password': 'software',
+    'user': 'root',
+    'password': 'root',
     'port': 3306,
     'database': 'software',
 }
