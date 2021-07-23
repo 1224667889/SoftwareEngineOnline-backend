@@ -1,11 +1,12 @@
 """JWT"""
-from flask import request, jsonify
+from flask import request
 import functools
+
+from models import users
 from utils import serialization
 from config import SECRET_KEY
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from itsdangerous import BadSignature, SignatureExpired
-from models.users import *
 
 
 def login_required(*auths_need):
@@ -21,14 +22,14 @@ def login_required(*auths_need):
             token = token.split()[-1]
             s = Serializer(SECRET_KEY)
             try:
-                user_id = s.loads(token)
-                user = find_by_id(user_id)
+                user_id = s.loads(token)["id"]
+                user = users.find_by_id(user_id)
                 if not user:
                     """用户不存在"""
                     return serialization.make_resp({"error_msg": "用户不存在"}, code=404)
                 if auths_need:
                     '''获取token中的权限列表如果在参数列表中则表示有权限，否则就表示没有权限'''
-                    if not [auth for auth in user.auths if auth in auths_need]:
+                    if not [auth.name for auth in user.auths if auth.name in auths_need]:
                         # 交集为空,表示权限不足
                         return serialization.make_resp({"error_msg": "权限不足"}, code=401)
             except SignatureExpired:
@@ -37,7 +38,7 @@ def login_required(*auths_need):
             except BadSignature:
                 '''token错误'''
                 return serialization.make_resp({"error_msg": "token错误"}, code=50000)
-            return func(*args, **kw)
+            return func(user, *args, **kw)
         return wrapper
     return decorator
 
