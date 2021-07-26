@@ -2,9 +2,8 @@
 from utils.logger import logger
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
-from utils import serialization
+from servers import auths
 from models import auths
-from utils.middleware import generate_token
 
 
 class User(db.Model):
@@ -51,7 +50,7 @@ class User(db.Model):
             self.is_changed = 1
             db.session.commit()
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             db.session.rollback()
             return e
         return None
@@ -64,7 +63,7 @@ class User(db.Model):
             db.session.commit()
             return None
         except Exception as e:
-            logging.error(e)
+            logger.error(e)
             db.session.rollback()
             return e
 
@@ -75,31 +74,3 @@ class User(db.Model):
             "student_id": self.student_id,
             "id": self.id
         }
-
-
-def find_by_id(user_id):
-    """id查询-唯一"""
-    return db.session.query(User).filter_by(id=user_id).first()
-
-
-def find_by_student_id(student_id):
-    """学号查询-唯一"""
-    return db.session.query(User).filter_by(student_id=student_id).first()
-
-# Todo: 全字段模糊查询
-
-
-def login(student_id, password):
-    """登录并返回token"""
-    if not student_id:          # Todo: 使用正则进行验证
-        return serialization.make_resp({"error_msg": "缺少学号"}, code=400)
-    if not password:
-        return serialization.make_resp({"error_msg": "缺少密码"}, code=400)
-    user = find_by_student_id(student_id)
-    if not user:
-        return serialization.make_resp({"error_msg": "用户不存在"}, code=404)
-    if user.verify_password(password):
-        token = generate_token(user)
-        return serialization.make_resp({"token": token, "msg": user.get_msg()}, code=200)
-    return serialization.make_resp({"error_msg": "账号或密码错误"}, code=400)
-

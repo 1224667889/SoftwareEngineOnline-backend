@@ -5,7 +5,7 @@ from flask import request
 import xlrd
 from utils import serialization
 from models import users
-from models import auths
+from servers import users
 from app import db
 from utils.middleware import login_required
 
@@ -50,3 +50,15 @@ def refresh_password():
     if user.refresh_password():
         return serialization.make_resp({"error_msg": "重置密码失败，请联系管理员"}, code=500)
     return serialization.make_resp({"msg": user.get_msg()}, code=200)
+
+
+# 用户列表-分页查询
+@admin.route("/users/detail", methods=["GET"])
+@login_required("SuperAdmin", "Admin")
+def check_users_detail():
+    page_number = request.args.get('page_number', 1, type=int)
+    page_size = request.args.get('page_size', 10, type=int)
+    keyword = request.args.get('keyword', "")
+    students = users.find_by_page(page_number, page_size, keyword)
+    return serialization.make_resp({"msg": [student.get_msg() for student in students]}, code=200)
+
