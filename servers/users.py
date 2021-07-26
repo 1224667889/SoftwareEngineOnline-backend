@@ -23,6 +23,10 @@ def find_by_page(page_number=1, page_size=10, keyword=""):
         .items
 
 
+def find_all():
+    return User.query.all()         # 需消耗较大内存，但是方便
+
+
 def login(student_id, password):
     """登录并返回token"""
     if not student_id:          # Todo: 使用正则进行验证

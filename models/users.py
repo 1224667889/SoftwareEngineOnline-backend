@@ -16,6 +16,7 @@ class User(db.Model):
     name = db.Column(db.String(16))
 
     auths = db.relationship('Auth', backref='users', secondary=auths.users_auths, lazy='dynamic')
+    notices = db.relationship('Notice', backref='user', lazy='dynamic')
 
     def add(self, student_id, name, auth_name="Student", commit=True):
         self.student_id = student_id
