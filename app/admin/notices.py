@@ -1,8 +1,7 @@
 """通知管理"""
-from models import users
+from models.users import User
 from . import admin
 from flask import request
-from models import notices
 from servers import notices
 from utils.middleware import login_required
 
@@ -10,7 +9,7 @@ from utils.middleware import login_required
 # 广播通知
 @admin.route("/notices/broadcast", methods=['POST'])
 @login_required("SuperAdmin", "Admin")
-def broadcast_notices(login_user: users.User):
+def broadcast_notices(login_user: User):
     title = request.form.get("title", "通知")
     message = request.form.get("message", "")
     host = login_user.name
@@ -20,7 +19,7 @@ def broadcast_notices(login_user: users.User):
 # 单播通知
 @admin.route("/notice/<string:student_id>", methods=['POST'])
 @login_required("SuperAdmin", "Admin")
-def uni_cast_notices(login_user: users.User, student_id):
+def uni_cast_notices(login_user: User, student_id):
     title = request.form.get("title", "通知")
     message = request.form.get("message", "")
     host = login_user.name

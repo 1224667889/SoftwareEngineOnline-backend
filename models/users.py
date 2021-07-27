@@ -3,7 +3,7 @@ from utils.logger import logger
 from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from servers import auths
-from models import auths
+from models.auths import users_auths
 
 
 class User(db.Model):
@@ -15,7 +15,7 @@ class User(db.Model):
 
     name = db.Column(db.String(16))
 
-    auths = db.relationship('Auth', backref='users', secondary=auths.users_auths, lazy='dynamic')
+    auths = db.relationship('Auth', backref='users', secondary=users_auths, lazy='dynamic')
     notices = db.relationship('Notice', backref='user', lazy='dynamic')
 
     def add(self, student_id, name, auth_name="Student", commit=True):

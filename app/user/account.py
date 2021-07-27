@@ -1,7 +1,7 @@
 """账号功能"""
 from . import user
 from flask import request
-from models import users
+from models.users import User
 from servers import users
 from utils.middleware import login_required
 from utils import serialization
@@ -18,7 +18,7 @@ def user_login():
 # 密码修改
 @user.route('/password', methods=['PUT'])
 @login_required("SuperAdmin", "Admin", "Student")
-def change_password(login_user: users.User):
+def change_password(login_user: User):
     old_password = request.form.get("old_password")
     new_password = request.form.get("new_password")
     # Todo: 正则验证格式   ！重要！
@@ -30,5 +30,5 @@ def change_password(login_user: users.User):
 # 查看个人信息
 @user.route('/detail', methods=['GET'])
 @login_required("SuperAdmin", "Admin", "Student")
-def check_detail(login_user: users.User):
+def check_detail(login_user: User):
     return serialization.make_resp({"msg": login_user.get_msg()}, code=200)
