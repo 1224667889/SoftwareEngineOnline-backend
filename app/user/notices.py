@@ -1,4 +1,4 @@
-"""账号功能"""
+"""通知功能"""
 from . import user
 from flask import request
 from models import users
