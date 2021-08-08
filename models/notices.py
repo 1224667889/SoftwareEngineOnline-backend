@@ -27,6 +27,14 @@ class Notice(db.Model):
             db.session.rollback()
             return e
 
+    def get_msg(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "host": self.host,
+            "read": self.read,
+        }
+
     def get_msg_detail(self):
         return {
             "id": self.id,
@@ -36,3 +44,9 @@ class Notice(db.Model):
             "read": self.read,
             "user_id": self.user_id
         }
+
+    def put_read(self):
+        if self.read == 0:
+            self.read = 1
+            db.session.commit()
+        return self.get_msg_detail()

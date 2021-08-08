@@ -2,7 +2,7 @@
 from flask import request
 import functools
 
-from models import users
+from servers import users
 from utils import serialization
 from config import SECRET_KEY
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
@@ -18,10 +18,10 @@ def login_required(*auths_need):
                 token = request.headers["Authorization"]
             except Exception as e:
                 '''没接收的到token,给前端抛出错误'''
-                return serialization.make_resp("", code=400)
-            token = token.split()[-1]
-            s = Serializer(SECRET_KEY)
+                return serialization.make_resp({"error_msg": "token缺失"}, code=400)
             try:
+                token = token.split()[-1]
+                s = Serializer(SECRET_KEY)
                 user_id = s.loads(token)["id"]
                 user = users.find_by_id(user_id)
                 if not user:
@@ -37,6 +37,8 @@ def login_required(*auths_need):
                 return serialization.make_resp({"error_msg": "token过期"}, code=50001)
             except BadSignature:
                 '''token错误'''
+                return serialization.make_resp({"error_msg": "token错误"}, code=50000)
+            except Exception:
                 return serialization.make_resp({"error_msg": "token错误"}, code=50000)
             return func(user, *args, **kw)
         return wrapper

@@ -16,18 +16,20 @@ def find_all():
     return Notice.query.all()         # 需消耗较大内存，但是方便
 
 
-def find_by_user_read(user: User, read=-1):
+def find_by_user_read(user: User, read=-1, page_number=1, page_size=10):
     """关联获取(常用)"""
-    if read == -1:      # -1获取全部
-        return user.notices
-    return user.notices.filter_by(read=read).all()
+    notices = user.notices
+    if read != -1:
+        notices = notices.filter_by(read=read)
+    pagination = notices.paginate(page_number, per_page=page_size)
+    return pagination.items, pagination.pages
 
 
 def broadcast(title, message, host):
     """广播消息"""
     students = users.find_all()
     for student in students:
-        err = Notice.add(student, title, message, host)
+        err = Notice().add(student, title, message, host)
         if err:
             db.session.rollback()
             return serialization.make_resp({"error_msg": "广播时出错，详情请查看错误日志"}, code=500)
@@ -38,7 +40,7 @@ def broadcast(title, message, host):
 def send(student_id, title, message, host):
     """单播消息"""
     student = users.find_by_student_id(student_id)
-    err = Notice.add(student, title, message, host, commit=True)
+    err = Notice().add(student, title, message, host, commit=True)
     if err:
         db.session.rollback()
         return serialization.make_resp({"error_msg": "消息发送时出错，详情请查看错误日志"}, code=500)

@@ -17,10 +17,10 @@ def find_by_student_id(student_id):
 
 
 def find_by_page(page_number=1, page_size=10, keyword=""):
-    return User.query.\
-        filter(User.name.like(f'%{keyword}%'))\
-        .paginate(page_number, per_page=page_size)\
-        .items
+    pagination = User.query. \
+        filter(User.name.like(f'%{keyword}%')) \
+        .paginate(page_number, per_page=page_size)
+    return pagination.items, pagination.pages
 
 
 def find_all():

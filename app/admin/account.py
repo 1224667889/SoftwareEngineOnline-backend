@@ -46,7 +46,7 @@ def students_upload():
 # 密码重置
 @admin.route("/password/refresh", methods=["PUT"])
 @login_required("SuperAdmin", "Admin")
-def refresh_password():
+def refresh_password(login_user: User):
     student_id = request.form.get("student_id")
     user = users.find_by_student_id(student_id)
     if user.refresh_password():
@@ -57,10 +57,11 @@ def refresh_password():
 # 用户列表-分页查询
 @admin.route("/users/detail", methods=["GET"])
 @login_required("SuperAdmin", "Admin")
-def check_users_detail():
+def check_users_detail(login_user: User):
     page_number = request.args.get('page_number', 1, type=int)
     page_size = request.args.get('page_size', 10, type=int)
     keyword = request.args.get('keyword', "")
-    students = users.find_by_page(page_number, page_size, keyword)
-    return serialization.make_resp({"msg": [student.get_msg() for student in students]}, code=200)
+    students, total_page = users.find_by_page(page_number, page_size, keyword)
+    return serialization.make_resp({"msg": [student.get_msg() for student in students], "total_page": total_page},
+                                   code=200)
 
