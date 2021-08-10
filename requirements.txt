@@ -13,3 +13,6 @@ typing-extensions==3.10.0.0
 Werkzeug==2.0.1
 xlrd==1.2.0
 zipp==3.5.0
+gunicorn
+gevent
+psutil>=5.7.0
