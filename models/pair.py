@@ -3,13 +3,13 @@ from utils.logger import logger
 import datetime
 
 
-class Team(db.Model):
-    __tablename__ = 'teams'
+class Pair(db.Model):
+    __tablename__ = 'pairs'
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(255), unique=True)        # 邀请码
     confirmed_at = db.Column(db.DateTime, index=True, default=datetime.datetime.now())  # 创建时间
 
-    students = db.relationship('User', backref='team', lazy='dynamic')
+    students = db.relationship('User', backref='pair', lazy='dynamic')
 
     def add(self, commit=True):
 

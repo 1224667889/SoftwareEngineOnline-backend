@@ -20,6 +20,11 @@ class User(db.Model):
     auths = db.relationship('Auth', backref='users', secondary=users_auths, lazy='dynamic')
     notices = db.relationship('Notice', backref='user', lazy='dynamic')
 
+    pair_owner = db.Column(db.Boolean, default=0)       # 是否是队长
+    team_owner = db.Column(db.Boolean, default=0)
+    pair_id = db.Column(db.Integer, db.ForeignKey('pairs.id'))
+    team_id = db.Column(db.Integer, db.ForeignKey('teams.id'))
+
     def add(self, student_id, name, auth_name="Student", commit=True):
         self.student_id = student_id
         self.name = name

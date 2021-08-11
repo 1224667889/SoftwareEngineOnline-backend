@@ -1,6 +1,5 @@
 from app import db
 from models.auths import Auth
-from servers import users
 from utils import serialization
 
 
@@ -12,10 +11,7 @@ def find_by_name(auth_name="Student"):
     return db.session.query(Auth).filter_by(name=auth_name).first()
 
 
-def add_auth_by_name(student_id, auth_name):
-    student = users.find_by_student_id(student_id)
-    if not student:
-        return serialization.make_resp({"error_msg": "用户不存在"}, code=404)
+def add_auth_by_name(student, auth_name):
     auth = find_by_name(auth_name)
     if not auth:
         return serialization.make_resp({"error_msg": "未定义权限"}, code=404)
@@ -27,10 +23,7 @@ def add_auth_by_name(student_id, auth_name):
     return serialization.make_resp({"msg": "添加成功"}, code=200)
 
 
-def remove_auth_by_name(student_id, auth_name):
-    student = users.find_by_student_id(student_id)
-    if not student:
-        return serialization.make_resp({"error_msg": "用户不存在"}, code=404)
+def remove_auth_by_name(student, auth_name):
     auth = find_by_name(auth_name)
     if not auth:
         return serialization.make_resp({"error_msg": "未定义权限"}, code=404)

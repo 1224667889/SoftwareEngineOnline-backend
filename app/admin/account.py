@@ -15,6 +15,9 @@ from utils.middleware import login_required
 # @login_required("SuperAdmin")
 def students_upload():
     # 测试代码
+    from models.pair import Pair
+    from models.task import Task
+    from models.team import Team
     db.drop_all()
     db.create_all()
     from models.auths import Auth
@@ -57,7 +60,7 @@ def refresh_password(login_user: User, student_id):
 # 全员密码重置
 @admin.route("/password", methods=["PUT"])
 @login_required("SuperAdmin")
-def refresh_password(login_user: User):
+def refresh_all_password(login_user: User):
     for user in users.find_all():
         if user.refresh_password():
             return serialization.make_resp({"error_msg": "重置密码失败，请联系管理员"}, code=500)
