@@ -15,9 +15,10 @@ from utils.middleware import login_required
 # @login_required("SuperAdmin")
 def students_upload():
     # 测试代码
-    from models.pair import Pair
-    from models.task import Task
-    from models.team import Team
+    from models.pairs import Pair
+    from models.tasks import Task
+    from models.teams import Team
+    from models.proportions import TeamProportion, PairProportion
     db.drop_all()
     db.create_all()
     from models.auths import Auth
@@ -26,6 +27,27 @@ def students_upload():
     Auth().add("Group Leader", "组长")     # 小组组长
     Auth().add("Student", "学生")          # 所有学生（包括我们）
     User().add("666666666", "老板", auth_name="SuperAdmin")
+    # # <test>
+    # User().add("000000001", "test")
+    # User().add("000000002", "test")
+    # User().add("000000003", "test")
+    # from models.teams import Team
+    # t = Team()
+    # t.add(users.find_by_student_id("666666666"), "key_value_team")
+    # t.join(users.find_by_student_id("000000001"))
+    # t.join(users.find_by_student_id("000000002"))
+    # t.join(users.find_by_student_id("000000003"))
+    # print("队长:", t.get_captain())
+    # print([student.get_msg() for student in t.get_students()])
+    # print([p.get_msg() for p in t.proportions])
+    # # t.delete()
+    # from models.pairs import Pair
+    # p = Pair()
+    # p.add(users.find_by_student_id("666666666"), "key_value_pair")
+    # p.join(users.find_by_student_id("000000001"))
+    # print(p.join(users.find_by_student_id("000000002")))
+    # print([i.get_msg() for i in p.proportions])
+    # <!test>
 
     try:
         file = request.files['file']

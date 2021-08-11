@@ -6,3 +6,5 @@ dbConfig = {
     'database': 'software',
 }
 SECRET_KEY = 'this_is_a_secret'
+MaxTeam = 10
+MaxPair = 2
