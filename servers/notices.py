@@ -1,5 +1,6 @@
 from app import db
 from models.notices import Notice
+from models.historyNotices import HistoryNotice
 from models.users import User
 from servers import users
 from utils import serialization
@@ -40,8 +41,22 @@ def broadcast(title, message, host):
 def send(student_id, title, message, host):
     """单播消息"""
     student = users.find_by_student_id(student_id)
+    if not student:
+        return serialization.make_resp({"error_msg": "用户不存在"}, code=404)
     err = Notice().add(student, title, message, host, commit=True)
     if err:
         db.session.rollback()
         return serialization.make_resp({"error_msg": "消息发送时出错，详情请查看错误日志"}, code=500)
     return serialization.make_resp({"msg": "消息发送完成"}, code=200)
+
+
+def get_history(page_number=1, page_size=10):
+    """获取消息发送历史"""
+    pagination = HistoryNotice.query.all().paginate(page_number, per_page=page_size)
+    return pagination.items, pagination.pages
+
+
+def find_history_by_id(history_notice_id):
+    """id查询-历史发送"""
+    return db.session.query(HistoryNotice). \
+        filter_by(id=history_notice_id).first()

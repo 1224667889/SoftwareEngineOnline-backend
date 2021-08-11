@@ -3,23 +3,21 @@ from utils.logger import logger
 import datetime
 
 
-class Notice(db.Model):
-    __tablename__ = 'notices'
+class HistoryNotice(db.Model):
+    __tablename__ = 'history_notices'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))               # 标题
     message = db.Column(db.String(255))             # 信息
     host = db.Column(db.String(16))                 # 来源
-    read = db.Column(db.Boolean, default=0)         # 已读?
+    to = db.Column(db.String(16))                   # 类型：""为广播，其他为按学号单播
     confirmed_at = db.Column(db.DateTime, index=True, default=datetime.datetime.now())  # 创建时间
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-
-    def add(self, user, title, message, host, commit=False):
+    def add(self, title, message, host, to, commit=True):
         self.title = title
         self.message = message
         self.host = host
+        self.to = to
         try:
-            user.notices.append(self)
             db.session.add(self)
             if commit:
                 db.session.commit()
@@ -34,23 +32,16 @@ class Notice(db.Model):
             "id": self.id,
             "title": self.title,
             "host": self.host,
-            "read": self.read,
+            "to": self.to,
             "confirmed": self.confirmed_at
         }
 
-    def get_msg_detail(self):
+    def get_detail(self):
         return {
             "id": self.id,
             "title": self.title,
             "message": self.message,
             "host": self.host,
-            "read": self.read,
-            "user_id": self.user_id,
+            "to": self.to,
             "confirmed": self.confirmed_at
         }
-
-    def put_read(self):
-        if self.read == 0:
-            self.read = 1
-            db.session.commit()
-        return self.get_msg_detail()

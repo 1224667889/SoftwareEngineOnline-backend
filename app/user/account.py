@@ -5,6 +5,7 @@ from models.users import User
 from servers import users
 from utils.middleware import login_required
 from utils import serialization
+from utils.middleware import generate_token
 
 
 # 用户登录
@@ -13,6 +14,12 @@ def user_login():
     student_id = request.form.get("student_id")
     password = request.form.get("password")
     return users.login(student_id, password)
+
+# 刷新token
+@user.route('/token', methods=['PUT'])
+@login_required("SuperAdmin", "Admin", "Student")
+def refresh_token(login_user: User):
+    return serialization.make_resp({"token": generate_token(login_user), "msg": user.get_msg()}, code=200)
 
 
 # 密码修改

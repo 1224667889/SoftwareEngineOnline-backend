@@ -4,6 +4,7 @@ from app import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from servers import auths
 from models.auths import users_auths
+import datetime
 
 
 class User(db.Model):
@@ -12,6 +13,7 @@ class User(db.Model):
     student_id = db.Column(db.String(16), unique=True)                 # 学号
     password = db.Column(db.String(255))                               # 密码
     is_changed = db.Column(db.Boolean, default=0)                      # 是否修改密码
+    confirmed_at = db.Column(db.DateTime, index=True, default=datetime.datetime.now())  # 创建时间
 
     name = db.Column(db.String(16))
 
@@ -75,3 +77,21 @@ class User(db.Model):
             "student_id": self.student_id,
             "id": self.id
         }
+
+    def add_auth(self, auth):
+        try:
+            self.auths.append(auth)
+            db.session.commit()
+        except Exception as e:
+            logger.error(e)
+            db.session.rollback()
+            return e
+
+    def remove_auth(self, auth):
+        try:
+            self.auths.remove(auth)
+            db.session.commit()
+        except Exception as e:
+            logger.error(e)
+            db.session.rollback()
+            return e

