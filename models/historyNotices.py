@@ -33,7 +33,7 @@ class HistoryNotice(db.Model):
             "title": self.title,
             "host": self.host,
             "to": self.to,
-            "confirmed": self.confirmed_at
+            "confirmed": datetime.datetime.timestamp(self.confirmed_at)
         }
 
     def get_detail(self):
@@ -43,5 +43,5 @@ class HistoryNotice(db.Model):
             "message": self.message,
             "host": self.host,
             "to": self.to,
-            "confirmed": self.confirmed_at
+            "confirmed": datetime.datetime.timestamp(self.confirmed_at)
         }

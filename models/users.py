@@ -101,3 +101,26 @@ class User(db.Model):
             logger.error(e)
             db.session.rollback()
             return e
+
+    def leave_team(self):
+        try:
+            for p in self.team_proportions:
+                self.team.proportions.remove(p)
+            self.team.students.remove(self)
+            db.session.commit()
+        except Exception as e:
+            logger.error(e)
+            db.session.rollback()
+            return e
+        return self.team.leave_msg(self)
+
+    def leave_pair(self):
+        try:
+            for p in self.pair_proportions:
+                self.pair.proportions.remove(p)
+            self.pair.students.remove(self)
+            db.session.commit()
+        except Exception as e:
+            logger.error(e)
+            db.session.rollback()
+            return e

@@ -3,6 +3,7 @@ from utils.logger import logger
 import datetime
 
 
+# 没法用继承，父类也会被创建，有点冗余
 class TeamProportion(db.Model):
     __tablename__ = 'team_proportions'
     id = db.Column(db.Integer, primary_key=True)
@@ -23,7 +24,8 @@ class TeamProportion(db.Model):
             "job": self.job,
             "rate": self.rate,
             "name": self.user.name,
-            "student_id": self.user.student_id
+            "student_id": self.user.student_id,
+            "updated": datetime.datetime.timestamp(self.update_at)
         }
 
     def delete(self):
@@ -56,7 +58,8 @@ class PairProportion(db.Model):
             "job": self.job,
             "rate": self.rate,
             "name": self.user.name,
-            "student_id": self.user.student_id
+            "student_id": self.user.student_id,
+            "updated": datetime.datetime.timestamp(self.update_at)
         }
 
     def delete(self):

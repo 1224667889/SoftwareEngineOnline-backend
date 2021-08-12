@@ -35,7 +35,7 @@ class Notice(db.Model):
             "title": self.title,
             "host": self.host,
             "read": self.read,
-            "confirmed": self.confirmed_at
+            "confirmed": datetime.datetime.timestamp(self.confirmed_at)
         }
 
     def get_msg_detail(self):
@@ -46,7 +46,7 @@ class Notice(db.Model):
             "host": self.host,
             "read": self.read,
             "user_id": self.user_id,
-            "confirmed": self.confirmed_at
+            "confirmed": datetime.datetime.timestamp(self.confirmed_at)
         }
 
     def put_read(self):
