@@ -38,5 +38,5 @@ def login(student_id, password):
         return serialization.make_resp({"error_msg": "用户不存在"}, code=404)
     if user.verify_password(password):
         token = generate_token(user)
-        return serialization.make_resp({"token": token, "msg": user.get_msg()}, code=200)
+        return serialization.make_resp({"token": token, "detail": user.get_msg()}, code=200)
     return serialization.make_resp({"error_msg": "账号或密码错误"}, code=400)

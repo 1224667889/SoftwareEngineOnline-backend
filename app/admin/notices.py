@@ -32,7 +32,7 @@ def uni_cast_notices(login_user: User, student_id):
 def check_notices(login_user: User, notice_id):
     history_notice = notices.find_history_by_id(notice_id)
     return serialization.make_resp(
-        {"msg": history_notice.get_detail()},
+        {"notice": history_notice.get_detail()},
         code=200
     )
 
@@ -45,6 +45,6 @@ def index_history_notices(login_user: User):
 
     history_notices, total_page = notices.get_history(page_number, page_size)
     return serialization.make_resp(
-        {"msg": [history_notice.get_msg() for history_notice in history_notices], "total_page": total_page},
+        {"notices": [history_notice.get_msg() for history_notice in history_notices], "total_page": total_page},
         code=200
     )

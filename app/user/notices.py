@@ -15,7 +15,7 @@ def check_notices(login_user: User, notice_id):
     if notice not in login_user.notices:
         return serialization.make_resp({"error_msg": "权限不足"}, code=401)
     return serialization.make_resp(
-        {"msg": notice.put_read()},
+        {"notice": notice.put_read()},
         code=200
     )
 
@@ -30,6 +30,6 @@ def index_notices(login_user: User):
 
     notices_, total_page = notices.find_by_user_read(login_user, read, page_number, page_size)
     return serialization.make_resp(
-        {"msg": [notice.get_msg() for notice in notices_], "total_page": total_page},
+        {"notices": [notice.get_msg() for notice in notices_], "total_page": total_page},
         code=200
     )

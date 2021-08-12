@@ -24,29 +24,29 @@ def students_upload():
     from models.auths import Auth
     Auth().add("SuperAdmin", "老板")
     Auth().add("Admin", "管理员")          # 我们
-    Auth().add("Group Leader", "组长")     # 小组组长
+    # Auth().add("Group Leader", "组长")     # 小组组长
     Auth().add("Student", "学生")          # 所有学生（包括我们）
-    User().add("666666666", "老板", auth_name="SuperAdmin")
-    # # <test>
-    # User().add("000000001", "test")
-    # User().add("000000002", "test")
-    # User().add("000000003", "test")
-    # from models.teams import Team
-    # t = Team()
-    # t.add(users.find_by_student_id("666666666"), "key_value_team")
-    # t.join(users.find_by_student_id("000000001"))
-    # t.join(users.find_by_student_id("000000002"))
-    # t.join(users.find_by_student_id("000000003"))
-    # print("队长:", t.get_captain())
-    # print([student.get_msg() for student in t.get_students()])
-    # print([p.get_msg() for p in t.proportions])
-    # # t.delete()
-    # from models.pairs import Pair
-    # p = Pair()
-    # p.add(users.find_by_student_id("666666666"), "key_value_pair")
-    # p.join(users.find_by_student_id("000000001"))
-    # print(p.join(users.find_by_student_id("000000002")))
-    # print([i.get_msg() for i in p.proportions])
+    User().add("66666666", "老板", auth_name="SuperAdmin")
+    # <test>
+    User().add("00000001", "test")
+    User().add("00000002", "test")
+    User().add("00000003", "test")
+    from models.teams import Team
+    t = Team()
+    t.add(users.find_by_student_id("00000001"), "key_value_team")
+    # t.join(users.find_by_student_id("66666666"))
+    t.join(users.find_by_student_id("00000002"))
+    t.join(users.find_by_student_id("00000003"))
+    print("队长:", t.get_captain())
+    print([student.get_msg() for student in t.get_students()])
+    print([p.get_msg() for p in t.proportions])
+    # t.delete()
+    from models.pairs import Pair
+    p = Pair()
+    p.add(users.find_by_student_id("66666666"), "key_value_pair")
+    p.join(users.find_by_student_id("00000001"))
+    print(p.join(users.find_by_student_id("00000002")))
+    print([i.get_msg() for i in p.proportions])
     # <!test>
 
     try:
@@ -77,7 +77,7 @@ def refresh_password(login_user: User, student_id):
         return serialization.make_resp({"error_msg": "用户不存在"}, code=404)
     if user.refresh_password():
         return serialization.make_resp({"error_msg": "重置密码失败，请联系管理员"}, code=500)
-    return serialization.make_resp({"msg": user.get_msg()}, code=200)
+    return serialization.make_resp({"detail": user.get_msg()}, code=200)
 
 # 全员密码重置
 @admin.route("/password", methods=["PUT"])
@@ -86,7 +86,7 @@ def refresh_all_password(login_user: User):
     for user in users.find_all():
         if user.refresh_password():
             return serialization.make_resp({"error_msg": "重置密码失败，请联系管理员"}, code=500)
-    return serialization.make_resp({"msg": user.get_msg()}, code=200)
+    return serialization.make_resp({"msg": "重置成功"}, code=200)
 
 # 用户列表-分页查询
 @admin.route("/users/detail", methods=["GET"])
@@ -96,6 +96,6 @@ def check_users_detail(login_user: User):
     page_size = request.args.get('page_size', 10, type=int)
     keyword = request.args.get('keyword', "")
     students, total_page = users.find_by_page(page_number, page_size, keyword)
-    return serialization.make_resp({"msg": [student.get_msg() for student in students], "total_page": total_page},
+    return serialization.make_resp({"students": [student.get_msg() for student in students], "total_page": total_page},
                                    code=200)
 
