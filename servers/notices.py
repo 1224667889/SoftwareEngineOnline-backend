@@ -56,7 +56,7 @@ def send(student_id, title, message, host):
 
 def get_history(page_number=1, page_size=10):
     """获取消息发送历史"""
-    pagination = HistoryNotice.query.all().paginate(page_number, per_page=page_size)
+    pagination = HistoryNotice.query.paginate(page_number, per_page=page_size)
     return pagination.items, pagination.pages
 
 

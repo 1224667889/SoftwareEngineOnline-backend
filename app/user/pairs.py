@@ -35,7 +35,7 @@ def create_pair(login_user: User):
     return serialization.make_resp(p.get_msg(), code=200)
 
 # 加入队伍
-@user.route('/pair/<string:code>', methods=['POST'])
+@user.route('/pair/<string:code>', methods=['GET'])
 @login_required("Student")
 def join_pair(login_user: User, code):
     p = pairs.find_by_code(code)
@@ -64,7 +64,10 @@ def put_pair(login_user: User):
     except Exception as e:
         logger.error(e)
         return serialization.make_resp({"error_msg": "参数错误"}, code=400)
-    if login_user.pair.set_proportions(proportions):
+    e = login_user.pair.set_proportions(proportions)
+    if e:
+        if e == 1:
+            return serialization.make_resp({"error_msg": "学号不匹配"}, code=400)
         return serialization.make_resp({"error_msg": "修改失败，请检测参数"}, code=500)
     return serialization.make_resp(login_user.pair.get_msg(), code=200)
 

@@ -104,6 +104,7 @@ class User(db.Model):
 
     def leave_team(self):
         try:
+            self.team.leave_msg(self)
             for p in self.team_proportions:
                 self.team.proportions.remove(p)
             self.team.students.remove(self)
@@ -112,10 +113,11 @@ class User(db.Model):
             logger.error(e)
             db.session.rollback()
             return e
-        return self.team.leave_msg(self)
+        return None
 
     def leave_pair(self):
         try:
+            self.pair.leave_msg(self)
             for p in self.pair_proportions:
                 self.pair.proportions.remove(p)
             self.pair.students.remove(self)

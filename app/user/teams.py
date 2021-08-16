@@ -35,7 +35,7 @@ def create_team(login_user: User):
     return serialization.make_resp(p.get_msg(), code=200)
 
 # 加入队伍
-@user.route('/team/<string:code>', methods=['POST'])
+@user.route('/team/<string:code>', methods=['GET'])
 @login_required("Student")
 def join_team(login_user: User, code):
     p = teams.find_by_code(code)
@@ -64,9 +64,13 @@ def put_team(login_user: User):
     except Exception as e:
         logger.error(e)
         return serialization.make_resp({"error_msg": "参数错误"}, code=400)
-    if login_user.team.set_proportions(proportions):
+    e = login_user.team.set_proportions(proportions)
+    if e:
+        if e == 1:
+            return serialization.make_resp({"error_msg": "学号不匹配"}, code=400)
         return serialization.make_resp({"error_msg": "修改失败，请检测参数"}, code=500)
     return serialization.make_resp(login_user.team.get_msg(), code=200)
+
 
 # 编辑队伍名称
 @user.route('/team/name', methods=['PUT'])

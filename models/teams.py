@@ -126,12 +126,16 @@ class Team(db.Model):
         try:
             for proportion in proportions:
                 p = self.proportions.filter_by(user_id=proportion.get("id", 0)).first()
+                if not p:
+                    return 1
                 job = proportion.get("job", "")
                 rate = proportion.get("rate", -1)
                 if job:
                     p.job = job
+                    p.update_at = datetime.datetime.now()
                 if rate >= 0:
                     p.rate = rate
+                    p.update_at = datetime.datetime.now()
             db.session.commit()
         except Exception as e:
             logger.error(e)
