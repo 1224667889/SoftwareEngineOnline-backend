@@ -16,7 +16,7 @@ from utils.middleware import login_required
 def students_upload():
     # 测试代码
     from models.pairs import Pair
-    from models.tasks import Task
+    from models.homeworks import Task, Document, Score
     from models.teams import Team
     from models.proportions import TeamProportion, PairProportion
     db.drop_all()

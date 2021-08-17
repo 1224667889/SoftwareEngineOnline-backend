@@ -19,6 +19,7 @@ class User(db.Model):
 
     auths = db.relationship('Auth', backref='users', secondary=users_auths, lazy='dynamic')
     notices = db.relationship('Notice', backref='user', lazy='dynamic')
+    tasks = db.relationship('Task', backref='user', lazy='dynamic')
 
     pair_id = db.Column(db.Integer, db.ForeignKey('pairs.id'))
     team_id = db.Column(db.Integer, db.ForeignKey('teams.id'))

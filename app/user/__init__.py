@@ -3,4 +3,4 @@ from flask import Blueprint
 
 user = Blueprint('user', __name__)
 
-from . import account, notices, teams, pairs
+from . import account, notices, teams, pairs, homeworks
