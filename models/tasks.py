@@ -25,5 +25,7 @@ class Task(db.Model):
     def get_msg(self):
         return {
             "id": self.id,
-
+            "task_type": self.task_type,
+            "team_type": self.team_type,
+            "confirmed_at": self.confirmed_at
         }

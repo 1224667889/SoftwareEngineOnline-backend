@@ -19,3 +19,5 @@ gevent==21.8.0
 gunicorn==20.1.0
 zope.event==4.5.0
 zope.interface==5.4.0
+PyMongo==3.12.0
+flask-pymongo==2.3.0
