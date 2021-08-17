@@ -17,6 +17,9 @@ docker build -t software_engine:1.0 .
 # 端口号映射 后端端口：8080->8080 数据库端口：4036->3306
 docker run -itd --name software_engine_container -p 8080:8080 -p 4036:3306 software_engine:1.0
 
-# 运行日志
+# 启动日志
 docker logs -f software_engine_container
+
+# 运行日志
+cat /var/log/nginx/access.log
 ```
