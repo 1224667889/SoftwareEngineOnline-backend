@@ -129,11 +129,11 @@ class Team(db.Model):
                 if not p:
                     return 1
                 job = proportion.get("job", "")
-                rate = proportion.get("rate", -1)
+                rate = proportion.get("rate", -1., type=float)
                 if job:
                     p.job = job
                     p.update_at = datetime.datetime.now()
-                if rate >= 0:
+                if 0 <= rate <= 1:
                     p.rate = rate
                     p.update_at = datetime.datetime.now()
             db.session.commit()

@@ -5,6 +5,7 @@ from utils.util import create_safe_name, allow_document
 from config import documents_path
 
 
+# 单项分数
 class Score(db.Model):
     __tablename__ = 'scores'
     id = db.Column(db.Integer, primary_key=True)
@@ -29,6 +30,7 @@ class Score(db.Model):
             return e
 
 
+# 附件
 class Document(db.Model):
     __tablename__ = 'documents'
     id = db.Column(db.Integer, primary_key=True)
@@ -62,6 +64,7 @@ class Document(db.Model):
             return e
 
 
+# 作业
 class Task(db.Model):
     __tablename__ = 'tasks'
     id = db.Column(db.Integer, primary_key=True)

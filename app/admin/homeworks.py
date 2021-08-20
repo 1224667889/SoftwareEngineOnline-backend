@@ -22,7 +22,20 @@ def document_upload(login_user: User):
 @login_required("SuperAdmin", "Admin")
 def new_homework(login_user: User):
     title = request.json.get("title", "", type=str)
+    task_type = request.json.get("task_type", -1, type=int)     # 0:其他;1:oj;2:博客
+    team_type = request.json.get("team_type", -1, type=int)     # 0:单人;1:结对;2:团队
+    if task_type > 2:
+        task_type = -1
+    if team_type > 2:
+        team_type = -1
+    # begin_at
+    # deadline
+    # over_at
+    # document_id
+    weight = request.json.get("weight", -1, type=int)
+    scores = request.json.get("scores")
+    if task_type == -1 or team_type == -1:
+        return serialization.make_resp({"error_msg": "类型错误"}, code=400)
     if not title:
         return serialization.make_resp({"error_msg": "未填写标题"}, code=400)
-    # Todo: 发布作业
 

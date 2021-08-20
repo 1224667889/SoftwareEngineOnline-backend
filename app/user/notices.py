@@ -19,6 +19,17 @@ def check_notices(login_user: User, notice_id):
         code=200
     )
 
+# 删除通知
+@user.route('/notice/<string:notice_id>', methods=['DELETE'])
+@login_required("SuperAdmin", "Admin", "Student")
+def delete_notices(login_user: User, notice_id):
+    notice = notices.find_by_id(notice_id)
+    if notice not in login_user.notices:
+        return serialization.make_resp({"error_msg": "权限不足"}, code=401)
+    if notice.delete():
+        return serialization.make_resp({"error_msg": "删除失败"}, code=500)
+    return serialization.make_resp({"msg": "删除成功"}, code=200)
+
 
 # 获取通知列表
 @user.route('/notice/index', methods=['GET'])

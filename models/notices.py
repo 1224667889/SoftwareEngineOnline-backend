@@ -29,6 +29,16 @@ class Notice(db.Model):
             db.session.rollback()
             return e
 
+    def delete(self):
+        try:
+            db.session.delete(self)
+            db.session.commit()
+            return None
+        except Exception as e:
+            logger.error(e)
+            db.session.rollback()
+            return e
+
     def get_msg(self):
         return {
             "id": self.id,
