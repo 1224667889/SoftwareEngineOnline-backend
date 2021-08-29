@@ -16,7 +16,7 @@ def check_password(pwd):
 
 
 def create_safe_name():
-    return uuid.uuid5(uuid.NAMESPACE_X500, str(uuid.uuid1()) + str(random.random()))
+    return str(uuid.uuid5(uuid.NAMESPACE_X500, str(uuid.uuid1()) + str(random.random())))
 
 
 def allow_document(suffix: str):

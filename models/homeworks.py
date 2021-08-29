@@ -3,6 +3,7 @@ from utils.logger import logger
 import datetime
 from utils.util import create_safe_name, allow_document
 from config import documents_path
+from models.users import User
 
 
 # 单项分数
@@ -28,6 +29,13 @@ class Score(db.Model):
             logger.error(e)
             db.session.rollback()
             return e
+
+    def get_msg(self):
+        return {
+            "point": self.point,
+            "description": self.description,
+            "max": self.max
+        }
 
 
 # 附件
@@ -69,12 +77,12 @@ class Task(db.Model):
     __tablename__ = 'tasks'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))
-    task_type = db.Column(db.Integer, default=0)    # 0:其他;1:oj;2:博客
     team_type = db.Column(db.Integer, default=0)    # 0:单人;1:结对;2:团队
     confirmed_at = db.Column(db.DateTime, index=True, default=datetime.datetime.now())  # 创建时间
     begin_at = db.Column(db.DateTime, index=True, default=datetime.datetime.now())      # 开始时间
     deadline = db.Column(db.DateTime, index=True, default=datetime.datetime.now())      # 结束时间
     over_at = db.Column(db.DateTime, index=True, default=datetime.datetime.now())       # 公示时间
+    is_delete = db.Column(db.Boolean, default=False)    # 是否删除（软删除）
     weight = db.Column(db.Integer, default=0)       # 权重
     score = db.Column(db.Integer)                   # 总分：冗余减少计算量
 
@@ -84,30 +92,33 @@ class Task(db.Model):
     documents = db.relationship('Document', backref='task', lazy='dynamic')
 
     def add(self, title: str,
-            task_type: int,
             team_type: int,
             begin_at: datetime,
             deadline: datetime,
             over_at: datetime,
             weight: int,
-            document: Document,
+            documents: list,
             scores: list,
+            host: User,
             commit=True):
         self.title = title
-        self.task_type = task_type
         self.team_type = team_type
         self.begin_at = begin_at
         self.deadline = deadline
         self.over_at = over_at
         self.weight = weight
+        self.score = 0
+        self.user_id = host.id
         try:
             for score in scores:
                 s = Score()
                 e = s.add(score['point'], score['description'], score['max'])
                 if e:
                     return e
+                self.score += s.max
                 self.scores.append(s)
-            self.documents.append(document)
+            for document in documents:
+                self.documents.append(document)
             db.session.add(self)
             if commit:
                 db.session.commit()
@@ -120,16 +131,61 @@ class Task(db.Model):
     def get_msg(self):
         return {
             "id": self.id,
-            "task_type": self.task_type,
             "team_type": self.team_type,
-            "confirmed_at": self.confirmed_at,
-            "begin_at": self.begin_at,
-            "over_at": self.over_at,
-            "deadline": self.deadline,
+            "title": self.title,
+            "confirmed_at": datetime.datetime.timestamp(self.confirmed_at),
+            "begin_at": datetime.datetime.timestamp(self.begin_at),
+            "over_at": datetime.datetime.timestamp(self.over_at),
+            "deadline": datetime.datetime.timestamp(self.deadline),
             "publisher": self.user.name,
             "weight": self.weight,
-            "score": self.score,
+            "sum": self.score,
+            "is_delete": self.is_delete,
+            "scores": [score.get_msg() for score in self.scores],
+            "documents": [document.get_msg() for document in self.documents]
         }
+
+    def get_msg_safe(self):
+        return {
+            "id": self.id,
+            "team_type": self.team_type,
+            "title": self.title,
+            "begin_at": datetime.datetime.timestamp(self.begin_at),
+            "over_at": datetime.datetime.timestamp(self.over_at),
+            "deadline": datetime.datetime.timestamp(self.deadline),
+            "weight": self.weight,
+            "sum": self.score,
+            "scores": [score.get_msg() for score in self.scores],
+            "documents": [document.get_msg() for document in self.documents]
+        }
+
+    def get_index(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "begin_at": datetime.datetime.timestamp(self.begin_at),
+            "deadline": datetime.datetime.timestamp(self.deadline),
+        }
+
+    def change_state(self):
+        try:
+            self.is_delete = not self.is_delete
+            db.session.commit()
+            return None
+        except Exception as e:
+            logger.error(e)
+            db.session.rollback()
+            return e
+
+    def change_weight(self, weight: int):
+        try:
+            self.weight = weight
+            db.session.commit()
+            return None
+        except Exception as e:
+            logger.error(e)
+            db.session.rollback()
+            return e
 
     def upload_homework(self, homework):
         now = datetime.datetime.now()

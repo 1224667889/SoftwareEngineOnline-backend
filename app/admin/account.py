@@ -111,3 +111,16 @@ def user_detail(login_user: User, student_id):
         return serialization.make_resp({"error_msg": "用户不存在"}, code=404)
     return serialization.make_resp({"student": student.get_msg()}, code=200)
 
+
+# 新增用户
+@admin.route("/user", methods=["POST"])
+@login_required("SuperAdmin", "Admin")
+def add_new_user(login_user: User):
+    student_id = request.form.get("student_id")
+    name = request.form.get("name")
+    user = User()
+    err = user.add(student_id, name, commit=True)
+    if err:
+        db.session.rollback()
+        return serialization.make_resp({"error_msg": "导入出错，请检查文件"}, code=500)
+    return serialization.make_resp({"student": user.get_msg()}, code=200)

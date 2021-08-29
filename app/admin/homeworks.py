@@ -1,4 +1,5 @@
 """作业管理"""
+import servers.homeworks
 from models.users import User
 from . import admin
 from flask import request
@@ -23,21 +24,101 @@ def document_upload(login_user: User):
 @admin.route("/homework", methods=['POST'])
 @login_required("SuperAdmin", "Admin")
 def new_homework(login_user: User):
-    title = request.json.get("title", "", type=str)
-    task_type = request.json.get("task_type", -1, type=int)     # 0:其他;1:oj;2:博客
-    team_type = request.json.get("team_type", -1, type=int)     # 0:单人;1:结对;2:团队
-    if task_type > 2:
-        task_type = -1
-    if team_type > 2:
-        team_type = -1
-    # begin_at
-    # deadline
-    # over_at
-    # document_id
-    weight = request.json.get("weight", -1, type=int)
-    scores = request.json.get("scores")
-    if task_type == -1 or team_type == -1:
-        return serialization.make_resp({"error_msg": "类型错误"}, code=400)
-    if not title:
-        return serialization.make_resp({"error_msg": "未填写标题"}, code=400)
+    try:
+        title = request.json.get("title")
+        if not title:
+            return serialization.make_resp({"error_msg": "未填写标题"}, code=400)
+        team_type = int(request.json.get("team_type"))     # 0:单人;1:结对;2:团队
+        if team_type > 2 or team_type < 0:
+            return serialization.make_resp({"error_msg": "作业类型错误"}, code=400)
+        weight = int(request.json.get("weight"))
+        scores = list(request.json.get("scores"))
+    except Exception as e:
+        print(e)
+        return serialization.make_resp({"error_msg": "参数格式错误"}, code=400)
+    try:
+        begin_at = datetime.datetime.fromtimestamp(int(request.json.get("begin_at")))   # 开始时间
+        deadline = datetime.datetime.fromtimestamp(int(request.json.get("deadline")))   # 结束时间
+        over_at = datetime.datetime.fromtimestamp(int(request.json.get("over_at")))     # 公示时间
+    except Exception as e:
+        return serialization.make_resp({"error_msg": "时间类型错误"}, code=400)
+    document_u_name_list = request.json.get("documents").split(",")
+    documents = [homeworks.find_document_u_name(u_name) for u_name in document_u_name_list]
+    task, err = homeworks.create_homework(
+        title,
+        team_type,
+        begin_at,
+        deadline,
+        over_at,
+        weight,
+        documents,
+        scores,
+        login_user
+    )
+    if err:
+        return serialization.make_resp({"error_msg": "上传错误:" + str(err)}, code=500)
+    return serialization.make_resp({"task": task.get_msg()}, code=200)
+
+
+# 查询作业详情(可查询已删除) - 管理员
+@admin.route("/homework/<string:task_id>", methods=['GET'])
+@login_required("SuperAdmin", "Admin")
+def homework_detail_admin(login_user: User, task_id):
+    task = homeworks.find_by_id_force(task_id)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    return serialization.make_resp({"task": task.get_msg()}, code=200)
+
+
+# 查询作业列表(可含删除)
+@admin.route("/homework/index", methods=['GET'])
+@login_required("SuperAdmin", "Admin", "Student")
+def homework_index_admin(login_user: User):
+    page_number = request.args.get('page_number', 1, type=int)
+    page_size = request.args.get('page_size', 10, type=int)
+    team_type = request.args.get("team_type", -1, type=int)
+    keyword = request.args.get('keyword', "")
+    is_delete = request.args.get('is_delete', -1, type=int)
+    tasks, total_page = homeworks.find_by_team_type_page(
+        team_type,
+        page_number,
+        page_size,
+        keyword,
+        is_delete
+    )
+    return serialization.make_resp(
+        {
+            "tasks": [task.get_index() for task in tasks],
+            "total_page": total_page
+        },
+        code=200
+    )
+
+
+# 删除/恢复作业
+@admin.route("/homework/<string:task_id>", methods=['PUT'])
+@login_required("SuperAdmin", "Admin")
+def homework_change(login_user: User, task_id):
+    task = homeworks.find_by_id_force(task_id)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    err = task.change_state()
+    if err:
+        return serialization.make_resp({"error_msg": "修改失败"}, code=500)
+    return serialization.make_resp({"task": task.get_msg()}, code=200)
+
+
+# 设置权重
+@admin.route("/homework/<string:task_id>/weight", methods=['PUT'])
+@login_required("SuperAdmin", "Admin")
+def homework_change_weight(login_user: User, task_id):
+    task = homeworks.find_by_id_force(task_id)
+    weight = request.form.get("weight", default=0, type=int)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    err = task.change_weight(weight)
+    if err:
+        return serialization.make_resp({"error_msg": "修改失败"}, code=500)
+    return serialization.make_resp({"task": task.get_msg()}, code=200)
+
 

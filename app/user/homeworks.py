@@ -33,3 +33,31 @@ def document_upload(login_user: User, u_name):
     except Exception as e:
         logger.error(e)
         return serialization.make_resp({"error_msg": "文档返回失败"}, code=500)
+
+
+# 查询作业列表
+@user.route("/homework/index", methods=['GET'])
+@login_required("SuperAdmin", "Admin", "Student")
+def homework_index(login_user: User):
+    page_number = request.args.get('page_number', 1, type=int)
+    page_size = request.args.get('page_size', 10, type=int)
+    team_type = request.args.get("team_type", -1, type=int)
+    keyword = request.args.get('keyword', "")
+    tasks, total_page = homeworks.find_by_team_type_page(team_type, page_number, page_size, keyword, False)
+    return serialization.make_resp(
+        {
+            "tasks": [task.get_index() for task in tasks],
+            "total_page": total_page
+        },
+        code=200
+    )
+
+
+# 查询作业详情 - 学生
+@user.route("/homework/<string:task_id>", methods=['GET'])
+@login_required("SuperAdmin", "Admin", "Student")
+def homework_detail(login_user: User, task_id):
+    task = homeworks.find_by_id(task_id)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    return serialization.make_resp({"task": task.get_msg_safe()}, code=200)

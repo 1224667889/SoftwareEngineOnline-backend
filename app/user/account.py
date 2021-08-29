@@ -21,7 +21,7 @@ def user_login():
 @user.route('/token', methods=['PUT'])
 @login_required("SuperAdmin", "Admin", "Student")
 def refresh_token(login_user: User):
-    return serialization.make_resp({"token": generate_token(login_user), "detail": user.get_msg()}, code=200)
+    return serialization.make_resp({"token": generate_token(login_user), "detail": login_user.get_msg()}, code=200)
 
 
 # 密码修改
