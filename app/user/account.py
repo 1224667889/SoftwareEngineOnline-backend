@@ -16,6 +16,7 @@ def user_login():
     password = request.form.get("password")
     return users.login(student_id, password)
 
+
 # 刷新token
 @user.route('/token', methods=['PUT'])
 @login_required("SuperAdmin", "Admin", "Student")

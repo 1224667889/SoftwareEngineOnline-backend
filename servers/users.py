@@ -2,34 +2,40 @@ from app import db
 from utils import serialization
 from utils.middleware import generate_token
 from models.users import User
+from sqlalchemy import or_
 
 
 def find_by_id(user_id):
     """id查询-唯一"""
-    return db.session.query(User).\
+    return db.session.query(User). \
         filter_by(id=user_id).first()
 
 
 def find_by_student_id(student_id):
     """学号查询-唯一"""
-    return db.session.query(User).\
+    return db.session.query(User). \
         filter_by(student_id=student_id).first()
 
 
 def find_by_page(page_number=1, page_size=10, keyword=""):
     pagination = User.query. \
-        filter(User.name.like(f'%{keyword}%')) \
-        .paginate(page_number, per_page=page_size)
+        filter(
+            or_(
+                User.name.like(f'%{keyword}%'),
+                User.student_id.like(f'%{keyword}%')
+            )
+        ).\
+        paginate(page_number, per_page=page_size)
     return pagination.items, pagination.pages
 
 
 def find_all():
-    return User.query.all()         # 需消耗较大内存，但是方便
+    return User.query.all()  # 需消耗较大内存，但是方便
 
 
 def login(student_id, password):
     """登录并返回token"""
-    if not student_id:          # Todo: 使用正则进行验证
+    if not student_id:  # Todo: 使用正则进行验证
         return serialization.make_resp({"error_msg": "缺少学号"}, code=400)
     if not password:
         return serialization.make_resp({"error_msg": "缺少密码"}, code=400)

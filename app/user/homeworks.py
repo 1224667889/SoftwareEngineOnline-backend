@@ -8,6 +8,7 @@ from utils import serialization
 from utils.logger import logger
 from config import documents_path
 
+
 # 下载文档
 @user.route("/homework/document/<string:u_name>", methods=['GET'])
 @login_required("SuperAdmin", "Admin", "Student")

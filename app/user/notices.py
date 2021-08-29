@@ -19,6 +19,7 @@ def check_notices(login_user: User, notice_id):
         code=200
     )
 
+
 # 删除通知
 @user.route('/notice/<string:notice_id>', methods=['DELETE'])
 @login_required("SuperAdmin", "Admin", "Student")

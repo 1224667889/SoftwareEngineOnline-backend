@@ -26,6 +26,7 @@ def uni_cast_notices(login_user: User, student_id):
     host = login_user.name
     return notices.send(student_id, title, message, host)
 
+
 # 获取历史通知
 @admin.route('/notice/history/<string:notice_id>', methods=['GET'])
 @login_required("SuperAdmin", "Admin")
@@ -35,6 +36,7 @@ def check_notices(login_user: User, notice_id):
         {"notice": history_notice.get_detail()},
         code=200
     )
+
 
 # 获取历史通知列表
 @admin.route('/notice/history/index', methods=['GET'])

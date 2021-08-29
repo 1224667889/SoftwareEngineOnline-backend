@@ -34,6 +34,7 @@ def create_team(login_user: User):
         return serialization.make_resp({"error_msg": "队伍创建失败，换个名称再试试"}, code=500)
     return serialization.make_resp(p.get_msg(), code=200)
 
+
 # 加入队伍
 @user.route('/team/<string:code>', methods=['GET'])
 @login_required("Student")
@@ -49,6 +50,7 @@ def join_team(login_user: User, code):
             return serialization.make_resp({"error_msg": "队伍已满"}, code=40002)
         return serialization.make_resp({"error_msg": "队伍加入失败"}, code=500)
     return serialization.make_resp(p.get_msg(), code=200)
+
 
 # 编辑队伍
 @user.route('/team', methods=['PUT'])
@@ -88,6 +90,7 @@ def put_name_team(login_user: User):
         return serialization.make_resp({"error_msg": "名称修改失败，换个名称再试试"}, code=500)
     return serialization.make_resp(login_user.team.get_msg(), code=200)
 
+
 # 离开队伍
 @user.route('/team/me', methods=['DELETE'])
 @login_required("Student")
@@ -105,6 +108,7 @@ def leave_team(login_user: User):
         return serialization.make_resp({"error_msg": "修改失败，请联系管理员"}, code=500)
     return serialization.make_resp({"msg": "退出成功"}, code=200)
 
+
 # 解散队伍
 @user.route('/team', methods=['DELETE'])
 @login_required("Student")
@@ -121,6 +125,7 @@ def delete_team(login_user: User):
     if login_user.team.delete():
         return serialization.make_resp({"error_msg": "修改失败，请联系管理员"}, code=500)
     return serialization.make_resp({"msg": "解散成功"}, code=200)
+
 
 # 移交队长
 @user.route('/team/<string:student_id>', methods=['PUT'])
