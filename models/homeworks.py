@@ -6,6 +6,19 @@ from config import documents_path
 from models.users import User
 
 
+# 分割点
+class Split(db.Model):
+    __tablename__ = 'splits'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
+
+    task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'))
+    score_id = db.Column(db.Integer, db.ForeignKey('scores.id'))
+
+    def __init__(self, title):
+        self.title = title
+
+
 # 单项分数
 class Score(db.Model):
     __tablename__ = 'scores'
@@ -15,6 +28,7 @@ class Score(db.Model):
     max = db.Column(db.Integer)
 
     task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'))
+    split = db.relationship('Split', backref='score', uselist=False)
 
     def add(self, point: str, description: str, max: int, commit=False):
         self.point = point
@@ -31,11 +45,14 @@ class Score(db.Model):
             return e
 
     def get_msg(self):
-        return {
+        ret = {
             "point": self.point,
             "description": self.description,
-            "max": self.max
+            "max": self.max,
         }
+        if self.split:
+            ret["split"] = self.split.title
+        return ret
 
 
 # 附件
@@ -90,6 +107,7 @@ class Task(db.Model):
 
     scores = db.relationship('Score', backref='task', lazy='dynamic')
     documents = db.relationship('Document', backref='task', lazy='dynamic')
+    splits = db.relationship('Split', backref='task', lazy='dynamic')
 
     def add(self, title: str,
             team_type: int,
@@ -115,10 +133,15 @@ class Task(db.Model):
                 e = s.add(score['point'], score['description'], score['max'])
                 if e:
                     return e
+                if score.get("split"):
+                    sp = Split(title)
+                    self.splits.append(sp)
+                    s.split = sp
                 self.score += s.max
                 self.scores.append(s)
             for document in documents:
-                self.documents.append(document)
+                if document:
+                    self.documents.append(document)
             db.session.add(self)
             if commit:
                 db.session.commit()
@@ -142,7 +165,8 @@ class Task(db.Model):
             "sum": self.score,
             "is_delete": self.is_delete,
             "scores": [score.get_msg() for score in self.scores],
-            "documents": [document.get_msg() for document in self.documents]
+            "documents": [document.get_msg() for document in self.documents],
+            "splits": [split.title for split in self.splits]        # <-按这个去切
         }
 
     def get_msg_safe(self):
