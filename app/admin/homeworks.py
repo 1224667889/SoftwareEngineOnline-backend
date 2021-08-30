@@ -1,5 +1,4 @@
 """作业管理"""
-import servers.homeworks
 from models.users import User
 from . import admin
 from flask import request
@@ -34,7 +33,6 @@ def new_homework(login_user: User):
         weight = int(request.json.get("weight"))
         scores = list(request.json.get("scores"))
     except Exception as e:
-        print(e)
         return serialization.make_resp({"error_msg": "参数格式错误"}, code=400)
     try:
         begin_at = datetime.datetime.fromtimestamp(int(request.json.get("begin_at")))   # 开始时间
