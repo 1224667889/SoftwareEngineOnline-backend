@@ -1,12 +1,12 @@
 """生成flask_app"""
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from config import dbConfig, SECRET_KEY, mongoDBConfig
-from flask_pymongo import PyMongo
+from config import dbConfig, SECRET_KEY
+import pymongo
 
 
 db = SQLAlchemy()
-mongo = PyMongo()  # 开启数据库实例
+mongoCli = pymongo.MongoClient('mongodb://localhost:27017/')  # 开启数据库实例
 
 
 def create_app(debug=False):
@@ -21,18 +21,12 @@ def create_app(debug=False):
                                                dbConfig['port'],
                                                dbConfig['database'])
     # 链接mongoDB
-    app.config['MONGO_DBNAME'] = mongoDBConfig['database']
-    app.config['MONGO_URI'] = 'mongodb://%s:%s@%s:%d/%s' \
-                              % (mongoDBConfig['user'],
-                                 mongoDBConfig['password'],
-                                 mongoDBConfig['host'],
-                                 mongoDBConfig['port'],
-                                 mongoDBConfig['database'])
+    # app.config['MONGO_URI'] = 'mongodb://localhost:27017/'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
     app.url_map.strict_slashes = False
 
     db.init_app(app)
-    mongo.init_app(app)
+    # mongo.init_app(app)
 
     from .user import user as user_blueprint
     from .admin import admin as admin_blueprint

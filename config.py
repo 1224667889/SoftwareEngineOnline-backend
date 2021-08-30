@@ -6,13 +6,6 @@ dbConfig = {
     'database': 'software',
 }
 
-mongoDBConfig = {
-        'host': 'localhost',
-        'user': 'software',
-        'password': 'mirrorlied',
-        'port': 27017,
-        'database': 'softwareTask'
-}
 allowed_documents = [
     'pdf', 'markdown', 'md', 'zip', 'rar', 'xlsx', 'txt',
     'ppt', 'pptx', 'xls', 'docx', 'doc'
