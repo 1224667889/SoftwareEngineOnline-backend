@@ -1,22 +1,18 @@
 FROM ubuntu:18.04
 USER root
 
-COPY sourses.list /etc/apt/
-RUN apt-get update \
-	&& apt-get upgrade
+COPY sources.list /etc/apt/
+RUN apt-get update -y \
+	&& apt-get upgrade -y
 
 RUN apt-get install "python3.7" -y \
     && apt-get install python3-pip -y \
     && apt-get install nginx -y \
-    && apt-get install "mysql-server-5.7" -y
+    && apt-get install "mysql-server-5.7" -y \
+    && apt-get install mongodb -y
 
-#RUN service mysql start
-#RUN mysql -uroot  -s -e "set password for root@localhost = password('mirror');exit"
-#    && set password for root@localhost = password('mirror'); \
-#    && exit
 
 COPY nginx.conf /etc/nginx/
-#RUN nginx
 
 WORKDIR /app
 COPY . .
