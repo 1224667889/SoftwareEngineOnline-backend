@@ -11,10 +11,11 @@ def create_homework(title: str,
                     over_at: datetime,
                     weight: int,
                     documents: list,
+                    splits: list,
                     scores: list,
                     host: User):
     task = Task()
-    return task, task.add(title, team_type, begin_at, deadline, over_at, weight, documents, scores, host)
+    return task, task.add(title, team_type, begin_at, deadline, over_at, weight, documents, splits, scores, host)
 
 
 def upload_document(file):

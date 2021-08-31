@@ -13,10 +13,16 @@ class Split(db.Model):
     title = db.Column(db.String(255))
 
     task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'))
-    score_id = db.Column(db.Integer, db.ForeignKey('scores.id'))
+    scores = db.relationship('Score', backref='scores', lazy='dynamic')
 
     def __init__(self, title):
         self.title = title
+
+    def get_msg(self):
+        return {
+            "title": self.title,
+            "scores": [score.get_msg() for score in self.scores]
+        }
 
 
 # 单项分数
@@ -27,8 +33,8 @@ class Score(db.Model):
     description = db.Column(db.String(255))
     max = db.Column(db.Integer)
 
-    task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'))
-    split = db.relationship('Split', backref='score', uselist=False)
+    # task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'))
+    split_id = db.Column(db.Integer, db.ForeignKey('splits.id'))
 
     def add(self, point: str, description: str, max: int, commit=False):
         self.point = point
@@ -45,14 +51,11 @@ class Score(db.Model):
             return e
 
     def get_msg(self):
-        ret = {
+        return {
             "point": self.point,
             "description": self.description,
             "max": self.max,
         }
-        if self.split:
-            ret["split"] = self.split.title
-        return ret
 
 
 # 附件
@@ -105,7 +108,7 @@ class Task(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    scores = db.relationship('Score', backref='task', lazy='dynamic')
+    # scores = db.relationship('Score', backref='task', lazy='dynamic')
     documents = db.relationship('Document', backref='task', lazy='dynamic')
     splits = db.relationship('Split', backref='task', lazy='dynamic')
 
@@ -116,6 +119,7 @@ class Task(db.Model):
             over_at: datetime,
             weight: int,
             documents: list,
+            splits: list,
             scores: list,
             host: User,
             commit=True):
@@ -127,18 +131,21 @@ class Task(db.Model):
         self.weight = weight
         self.score = 0
         self.user_id = host.id
+        splits_list = []
         try:
+            splits_list.append(Split("其他"))
+            for split_title in splits:
+                splits_list.append(Split(split_title))
             for score in scores:
                 s = Score()
                 e = s.add(score['point'], score['description'], score['max'])
                 if e:
                     return e
-                if score.get("split"):
-                    sp = Split(title)
-                    self.splits.append(sp)
-                    s.split = sp
+                index = score.get("parent", 0)
+                splits_list[index].scores.append(s)
                 self.score += s.max
-                self.scores.append(s)
+                # self.scores.append(s)
+            [self.splits.append(sp) for sp in splits_list]
             for document in documents:
                 if document:
                     self.documents.append(document)
@@ -164,12 +171,16 @@ class Task(db.Model):
             "weight": self.weight,
             "sum": self.score,
             "is_delete": self.is_delete,
-            "scores": [score.get_msg() for score in self.scores],
+            # "scores": [score.get_msg() for score in self.scores],
             "documents": [document.get_msg() for document in self.documents],
-            "splits": [split.title for split in self.splits]        # <-按这个去切
+            "splits": [split.get_msg() for split in self.splits]        # <-按这个去切
         }
 
     def get_msg_safe(self):
+        scores = []
+        for split in self.splits:
+            for score in split.scores:
+                scores.append(score.get_msg())
         return {
             "id": self.id,
             "team_type": self.team_type,
@@ -179,7 +190,7 @@ class Task(db.Model):
             "deadline": datetime.datetime.timestamp(self.deadline),
             "weight": self.weight,
             "sum": self.score,
-            "scores": [score.get_msg() for score in self.scores],
+            "scores": scores,
             "documents": [document.get_msg() for document in self.documents]
         }
 

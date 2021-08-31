@@ -41,6 +41,7 @@ def new_homework(login_user: User):
     except Exception as e:
         return serialization.make_resp({"error_msg": "时间类型错误"}, code=400)
     document_u_name_list = request.json.get("documents").split(",")
+    splits = request.json.get("splits").split(",")
     documents = [homeworks.find_document_u_name(u_name) for u_name in document_u_name_list]
     task, err = homeworks.create_homework(
         title,
@@ -50,6 +51,7 @@ def new_homework(login_user: User):
         over_at,
         weight,
         documents,
+        splits,
         scores,
         login_user
     )
