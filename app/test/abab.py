@@ -1,7 +1,7 @@
 from models.users import User
 from . import test
 from flask import request
-from servers import notices
+from servers import homeworks, users
 from utils.middleware import login_required
 from utils import serialization
 from app import mongoCli
@@ -9,30 +9,39 @@ from app import mongoCli
 
 @test.route("/hello")
 def test_hello():
-    mongoCli["pair"]["1"].insert({
-        "id": 1,						# 可以是个人id，也可以是结对、团队id
-        # "split": "标题1,标题2...",	# 分割标签，存于task->score->split表
-        "task": {
-            "url": "blog.xx",				# 博客地址，留档、没用
-            "html": "<body></body>",		# 文档原内容
-            "git": "github.com/xx/ab",		# 项目地址
-        },
+    task = {
+        "url": "blog.xx",				# 博客地址，留档、没用
+        "html": "<body></body>",		# 文档原内容
+        "git": "github.com/xx/ab",		# 项目地址
+    }
+    t = homeworks.find_by_id(4)
+    err = t.save_mongo_doc(users.find_by_id(1), task)
+    # return mongoCli["pair"].
 
-        "scores": [						# 使用作业的评分细则生成评分
-            {
-                "point": "1.1",				    # 标签
-                "description": "评分细则1",	    # 介绍
-                "socre": 10,				    # 得分，不超过max
-                "done": True				    # 是否已经评分
-            },
-            {
-                "point": "1.2",				    # 标签
-                "description": "评分细则2",	    # 介绍
-                "socre": 0,					    # 得分，不超过max
-                "done": False				    # 是否已经评分
-            },
-        ]
-    })
+    # mongoCli["pair"]["1"].insert({
+    #     "id": 1,						# 可以是个人id，也可以是结对、团队id
+    #     # "split": "标题1,标题2...",	# 分割标签，存于task->score->split表
+    #     "task": {
+    #         "url": "blog.xx",				# 博客地址，留档、没用
+    #         "html": "<body></body>",		# 文档原内容
+    #         "git": "github.com/xx/ab",		# 项目地址
+    #     },
+    #
+    #     "scores": [						# 使用作业的评分细则生成评分
+    #         {
+    #             "point": "1.1",				    # 标签
+    #             "description": "评分细则1",	    # 介绍
+    #             "socre": 10,				    # 得分，不超过max
+    #             "done": True				    # 是否已经评分
+    #         },
+    #         {
+    #             "point": "1.2",				    # 标签
+    #             "description": "评分细则2",	    # 介绍
+    #             "socre": 0,					    # 得分，不超过max
+    #             "done": False				    # 是否已经评分
+    #         },
+    #     ]
+    # })
     return "1111"
     # # 增
     # mongo.db.uploads.insert({

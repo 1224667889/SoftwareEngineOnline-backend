@@ -4,6 +4,7 @@ import datetime
 from utils.util import create_safe_name, allow_document
 from config import documents_path
 from models.users import User
+from app import mongoCli
 
 
 # 分割点
@@ -20,9 +21,31 @@ class Split(db.Model):
 
     def get_msg(self):
         return {
+            "id": self.id,
             "title": self.title,
             "scores": [score.get_msg() for score in self.scores]
         }
+
+    def get_mongo_doc(self):
+        group = self.get_mongo_group()
+        return group.find_one({f'done_{self.id}': False})
+
+    def get_mongo_doc_by_id(self, doc_id):
+        group = self.get_mongo_group()
+        return group.find_one({"id": doc_id})
+
+    def get_mongo_group(self):
+        mongo_db = self.task.get_mongo_db()
+        return mongo_db[f"{self.task.id}-{self.task.title}"]
+
+    def get_mongo_db(self):
+        # 0:单人;1:结对;2:团队
+        if self.task.team_type == 2:
+            return mongoCli["team"]
+        elif self.task.team_type == 1:
+            return mongoCli["pair"]
+        else:
+            return mongoCli["person"]
 
 
 # 单项分数
@@ -52,9 +75,20 @@ class Score(db.Model):
 
     def get_msg(self):
         return {
+            "id": self.id,
             "point": self.point,
             "description": self.description,
             "max": self.max,
+        }
+
+    def create_doc(self):
+        return {
+            "point": self.point,
+            "description": self.description,
+            "max": self.max,
+            "score": 0,
+            "referee": "",
+            "mark_at": 0
         }
 
 
@@ -177,10 +211,6 @@ class Task(db.Model):
         }
 
     def get_msg_safe(self):
-        scores = []
-        for split in self.splits:
-            for score in split.scores:
-                scores.append(score.get_msg())
         return {
             "id": self.id,
             "team_type": self.team_type,
@@ -190,16 +220,35 @@ class Task(db.Model):
             "deadline": datetime.datetime.timestamp(self.deadline),
             "weight": self.weight,
             "sum": self.score,
-            "scores": scores,
+            "scores": [score.get_msg() for score in self.get_scores()],
             "documents": [document.get_msg() for document in self.documents]
         }
 
+    def get_scores(self):
+        scores = []
+        for split in self.splits:
+            for score in split.scores:
+                scores.append(score)
+        return scores
+
+    def get_splits(self):
+        return [split.get_msg() for split in self.splits]
+
     def get_index(self):
+        now = datetime.datetime.now()
+        status = -1
+        if self.begin_at < now:
+            status = 0
+        elif self.deadline < now:
+            status = 1
+        elif self.over_at < now:
+            status = 2
         return {
             "id": self.id,
             "title": self.title,
             "begin_at": datetime.datetime.timestamp(self.begin_at),
             "deadline": datetime.datetime.timestamp(self.deadline),
+            "state": status
         }
 
     def change_state(self):
@@ -222,16 +271,43 @@ class Task(db.Model):
             db.session.rollback()
             return e
 
-    def upload_homework(self, homework):
-        now = datetime.datetime.now()
-        if now > self.deadline + datetime.timedelta(days=3):
-            return "你完了"
-        if now > self.deadline + datetime.timedelta(days=2):
-            return "凉一半"
-        if now > self.deadline + datetime.timedelta(days=1):
-            return "没完全凉"
-        if now > self.deadline:
-            return "overtime"
-        if now > self.begin_at:
-            return "success"
-        return "not begin"
+    def get_mongo_db(self):
+        # 0:单人;1:结对;2:团队
+        if self.team_type == 2:
+            return mongoCli["team"]
+        elif self.team_type == 1:
+            return mongoCli["pair"]
+        else:
+            return mongoCli["person"]
+
+    def get_mongo_group(self):
+        mongo_db = self.get_mongo_db()
+        return mongo_db[f"{self.id}-{self.title}"]
+
+    def save_mongo_doc(self, team, task: dict):
+        group = self.get_mongo_group()
+        try:
+            doc = group.find_one({'id': team.id})
+            scores = {}
+            for score in self.get_scores():
+                scores[f'{score.id}'] = score.create_doc()
+            dic = {
+                "id": team.id,
+                "task": task,
+                "scores": scores
+            }
+            for split in self.splits:
+                dic[f'done_{split.id}'] = False
+            if doc:
+                doc.update(dic)
+                group.save(doc)
+            else:
+                group.insert(dic)
+            return None
+        except Exception as e:
+            logger.error(e)
+            return e
+
+    def count_mongo(self):
+        group = self.get_mongo_group()
+        return group.count()

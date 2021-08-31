@@ -1,5 +1,5 @@
 from app import db
-from models.homeworks import Task, Document
+from models.homeworks import Task, Document, Score
 import datetime
 from models.users import User
 
@@ -26,6 +26,12 @@ def upload_document(file):
 def find_document_u_name(u_name):
     return db.session.query(Document).\
         filter_by(u_name=u_name).first()
+
+
+def find_score_by_id(score_id):
+    """id查询-唯一"""
+    return db.session.query(Score). \
+        filter_by(id=score_id).first()
 
 
 def find_by_id(task_id):
