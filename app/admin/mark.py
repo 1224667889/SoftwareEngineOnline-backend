@@ -84,7 +84,6 @@ def homework_mark(login_user: User, task_id, split_id):
 
 # 上传作业数据
 @admin.route("/homework/upload", methods=['POST'])
-@login_required("SuperAdmin", "Spider")
 def upload_task_auto():
     task = request.json
     data_list = list(task["data"])
@@ -113,46 +112,40 @@ def upload_task_auto():
     return serialization.make_resp({"msg": "提交成功"}, code=200)
 
 
-# # 导出excel
-# @admin.route("/homework/<string:task_id>/excel", methods=['GET'])
-# @login_required("SuperAdmin", "Admin")
-# def homework_download(login_user: User, task_id):
-#     task = homeworks.find_by_id_force(task_id)
-#     if not task:
-#         return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
-#     scores_list = [s["scores"].values() for s in task.get_all_scores()]
-#     scores = task.get_scores()
-#     print(scores_list)
-#     print([score.get_msg() for score in scores])
-#     try:
-#         out = BytesIO()  # 实例化二进制数据
-#         workbook = xlsxwriter.Workbook(out)  # 创建一个Excel实例
-#         table = workbook.add_worksheet()
-#         for i, score in enumerate(scores):
-#             table.write(0, i, f'{score.point}-{score.description}')
-#         for row, doc in enumerate(scores_list):
-#
-#             table.write(row + 1, , )
-#         # for row, upload in enumerate(uploads):
-#         #     for col, option in enumerate(upload["options"]):
-#         #         if types[col] == 1 or types[col] == 4:
-#         #             content = option["content"]
-#         #         elif types[col] == 2 or types[col] == 3:
-#         #             content = ""
-#         #             chooses = option["content"].split(";")
-#         #             op = wj.options[col].description.split(";")
-#         #             for n, c in enumerate(chooses):
-#         #                 if c == "1":
-#         #                     content += op[n] + ";"
-#         #         table.write(row + 1, col, content)
-#         workbook.close()
-#         filename = f"{task.title}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
-#         file = make_response(out.getvalue())
-#         out.close()
-#         file.headers['Content-Type'] = "application/vnd.ms-excel"
-#         file.headers["Cache-Control"] = "no-cache"
-#         file.headers['Content-Disposition'] = f"attachment; filename*={filename}"
-#         return file
-#     except Exception as e:
-#         return serialization.make_resp({"error_msg": f"下载失败:e"}, code=500)
+# 导出excel
+@admin.route("/homework/<string:task_id>/excel", methods=['GET'])
+@login_required("SuperAdmin", "Admin")
+def homework_download(login_user: User, task_id):
+    task = homeworks.find_by_id_force(task_id)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    scores_list = task.get_all_scores()
+    scores = task.get_scores()
+    try:
+        out = BytesIO()  # 实例化二进制数据
+        workbook = xlsxwriter.Workbook(out)  # 创建一个Excel实例
+        table = workbook.add_worksheet()
+        table.write(0, 0, '得分点')
+        table.write(1, 0, '详情')
+        table.write(2, 0, '满分')
+        for i, score in enumerate(scores):
+            table.write(0, i + 1, f'{score.point}({score.max})')
+            table.write(1, i + 1, f'{score.description}')
+        table.write(0, len(scores) + 1, f'总计({task.score})')
+        for row, doc in enumerate(list(scores_list)):
+            table.write(row + 2, 0, f'{task.get_team_name_by_id(doc["id"])}')
+            for col, score in enumerate(doc["scores"].values()):
+                table.write(row + 2, col + 1, f'{score["score"]}')
+            table.write(row + 2, len(scores) + 1, f'{doc["sum"]}')
+        workbook.close()
+        filename = f"{task.title}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
+        file = make_response(out.getvalue())
+        out.close()
+        file.headers['Content-Type'] = "application/vnd.ms-excel"
+        file.headers["Cache-Control"] = "no-cache"
+        file.headers['Content-Disposition'] = "attachment; filename*=%s" % \
+                                              filename.encode("utf-8").decode("latin1")
+        return file
+    except Exception as e:
+        return serialization.make_resp({"error_msg": f"下载失败:{e}"}, code=500)
 

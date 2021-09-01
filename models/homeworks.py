@@ -5,6 +5,7 @@ from utils.util import create_safe_name, allow_document
 from config import documents_path
 from models.users import User
 from app import mongoCli
+from servers import users, pairs, teams
 
 
 # 分割点
@@ -336,5 +337,20 @@ class Task(db.Model):
     def get_all_scores(self):
         group = self.get_mongo_group()
         return list(group.find())
+
+    def get_team_name_by_id(self, team_id):
+        if self.team_type == 0:
+            # 个人作业
+            task_team = users.find_by_id(team_id)
+        elif self.team_type == 1:
+            # 结对作业
+            task_team = pairs.find_by_id(team_id)
+        elif self.team_type == 2:
+            # 团队作业
+            task_team = teams.find_by_id(team_id)
+        else:
+            return None
+        return task_team.name
+
 
 
