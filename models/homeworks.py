@@ -251,6 +251,8 @@ class Task(db.Model):
             return 1
         elif self.over_at < now:
             return 2
+        else:
+            return 0
 
     def change_state(self):
         try:

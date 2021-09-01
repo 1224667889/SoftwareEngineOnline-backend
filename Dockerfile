@@ -20,4 +20,4 @@ RUN pip3 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 COPY entrypoint.sh /app
 RUN chmod +x entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["mirror"]
+CMD ["mirror", "mirror"]

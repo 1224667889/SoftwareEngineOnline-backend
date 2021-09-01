@@ -129,7 +129,7 @@ class Team(db.Model):
                 if not p:
                     return 1
                 job = proportion.get("job", "")
-                rate = proportion.get("rate", -1., type=float)
+                rate = proportion.get("rate", -1)
                 if job:
                     p.job = job
                     p.update_at = datetime.datetime.now()
