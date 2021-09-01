@@ -235,21 +235,22 @@ class Task(db.Model):
         return [split.get_msg() for split in self.splits]
 
     def get_index(self):
-        now = datetime.datetime.now()
-        status = -1
-        if self.begin_at < now:
-            status = 0
-        elif self.deadline < now:
-            status = 1
-        elif self.over_at < now:
-            status = 2
         return {
             "id": self.id,
             "title": self.title,
             "begin_at": datetime.datetime.timestamp(self.begin_at),
             "deadline": datetime.datetime.timestamp(self.deadline),
-            "state": status
+            "state": self.get_status()
         }
+
+    def get_status(self):
+        now = datetime.datetime.now()
+        if self.begin_at < now:
+            return 0
+        elif self.deadline < now:
+            return 1
+        elif self.over_at < now:
+            return 2
 
     def change_state(self):
         try:
@@ -284,15 +285,17 @@ class Task(db.Model):
         mongo_db = self.get_mongo_db()
         return mongo_db[f"{self.id}-{self.title}"]
 
-    def save_mongo_doc(self, team, task: dict):
+    def save_mongo_doc(self, doc_id, task: dict):
         group = self.get_mongo_group()
         try:
-            doc = group.find_one({'id': team.id})
+            doc = group.find_one({'id': doc_id})
             scores = {}
             for score in self.get_scores():
                 scores[f'{score.id}'] = score.create_doc()
             dic = {
-                "id": team.id,
+                "id": doc_id,
+                "sum": 0,
+                "max": self.score,
                 "task": task,
                 "scores": scores
             }
@@ -311,3 +314,20 @@ class Task(db.Model):
     def count_mongo(self):
         group = self.get_mongo_group()
         return group.count()
+
+    def get_doc_scores(self, doc_id):
+        group = self.get_mongo_group()
+        doc = group.find_one({"id": doc_id})
+        if doc:
+            return doc, doc["scores"]
+        return None, None
+
+    def get_doc_rank(self, doc_id):
+        group = self.get_mongo_group()
+        doc = group.find_one({"id": doc_id})
+        if not doc:
+            return None, None, None, None
+        doc_list = list(group.find())
+        doc_list = sorted(doc_list, key=lambda d: d["sum"], reverse=True)
+        return doc, doc["scores"], doc_list.index(doc), len(doc_list)
+

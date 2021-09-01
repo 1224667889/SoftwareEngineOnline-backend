@@ -61,3 +61,46 @@ def homework_detail(login_user: User, task_id):
     if not task:
         return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
     return serialization.make_resp({"task": task.get_msg_safe()}, code=200)
+
+
+# 查询作业得分
+@user.route("/homework/<string:task_id>/result", methods=['GET'])
+@login_required("SuperAdmin", "Admin", "Student")
+def homework_score_student(login_user: User, task_id):
+    task = homeworks.find_by_id(task_id)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    if task.get_status() < 2:
+        return serialization.make_resp({"error_msg": "结果未开放"}, code=401)
+    doc_id = request.args.get("id", 0, type=int)
+    doc, scores = task.get_doc_scores(doc_id)
+    if not scores:
+        return serialization.make_resp({"error_msg": "未找到作业记录"}, code=404)
+    return serialization.make_resp({
+        "scores": list(scores.values()),
+        "max": doc["max"],
+        "sum": doc["sum"],
+    }, code=200)
+
+
+# 查询排名
+@user.route("/homework/<string:task_id>/rank", methods=['GET'])
+@login_required("SuperAdmin", "Admin", "Student")
+def homework_rank_student(login_user: User, task_id):
+    task = homeworks.find_by_id(task_id)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    if task.get_status() < 2:
+        return serialization.make_resp({"error_msg": "结果未开放"}, code=401)
+    doc_id = request.args.get("id", 0, type=int)
+    doc, scores, rank_num, total_num = task.get_doc_rank(doc_id)
+    if not doc:
+        return serialization.make_resp({"error_msg": "未找到作业记录"}, code=404)
+    return serialization.make_resp({
+        "title": task.title,
+        "scores": list(scores.values()),
+        "rank_num": rank_num + 1,
+        "total_num": total_num,
+        "sum": doc["sum"],
+        "max": doc["max"]
+    }, code=200)

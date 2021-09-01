@@ -64,11 +64,18 @@ def homework_mark(login_user: User, task_id, split_id):
             doc["scores"][f'{score["id"]}']["score"] = score["score"]
             doc["scores"][f'{score["id"]}']["referee"] = login_user.name
             doc["scores"][f'{score["id"]}']["mark_at"] = int(time.time())
+            sum_score = 0
+            for score_doc in doc["scores"].values():
+                sum_score += score_doc["score"]
+            doc["sum"] = sum_score
+
     except Exception as e:
         return serialization.make_resp({"error_msg": f"参数错误:{e}"}, code=400)
     doc[f'done_{sp.id}'] = True
     task.get_mongo_group().save(doc)
-    return serialization.make_resp({"scores": [doc["scores"][f'{score["id"]}'] for score in scores_list]}, code=200)
+    return serialization.make_resp({
+        "scores": [doc["scores"][f'{score["id"]}'] for score in scores_list]
+    }, code=200)
 
 
 # 上传作业数据
@@ -77,4 +84,5 @@ def upload_task_auto(login_user: User):
     # task = homeworks.find_by_id(task_id)
     # if not task:
     #     return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
-    return serialization.make_resp({"splits": task.get_splits()}, code=200)
+    # return serialization.make_resp({"splits": task.get_splits()}, code=200)
+    return

@@ -15,7 +15,7 @@ def test_hello():
         "git": "github.com/xx/ab",		# 项目地址
     }
     t = homeworks.find_by_id(4)
-    err = t.save_mongo_doc(users.find_by_id(1), task)
+    err = t.save_mongo_doc(users.find_by_id(2).id, task)
     # return mongoCli["pair"].
 
     # mongoCli["pair"]["1"].insert({
