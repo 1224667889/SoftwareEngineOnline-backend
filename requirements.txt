@@ -21,3 +21,6 @@ zope.event==4.5.0
 zope.interface==5.4.0
 PyMongo==3.12.0
 flask-pymongo==2.3.0
+XlsxWriter==1.4.2
+beautifulsoup4==4.9.3
+lxml==4.6.2

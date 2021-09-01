@@ -331,3 +331,8 @@ class Task(db.Model):
         doc_list = sorted(doc_list, key=lambda d: d["sum"], reverse=True)
         return doc, doc["scores"], doc_list.index(doc), len(doc_list)
 
+    def get_all_scores(self):
+        group = self.get_mongo_group()
+        return list(group.find())
+
+
