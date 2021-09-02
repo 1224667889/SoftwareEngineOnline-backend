@@ -19,7 +19,11 @@ def homework_splits(login_user: User, task_id):
     task = homeworks.find_by_id(task_id)
     if not task:
         return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
-    return serialization.make_resp({"splits": task.get_splits()}, code=200)
+    return serialization.make_resp({
+        "splits": task.get_splits(),
+        "due": task.get_due(),
+        "all": task.count_mongo()
+    }, code=200)
 
 
 # 获取一个未批改的作业

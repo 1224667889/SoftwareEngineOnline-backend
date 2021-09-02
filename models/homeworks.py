@@ -4,6 +4,9 @@ import datetime
 from utils.util import create_safe_name, allow_document
 from config import documents_path
 from models.users import User
+from models.auths import Auth
+from models.pairs import Pair
+from models.teams import Team
 from app import mongoCli
 from servers import users, pairs, teams
 
@@ -24,12 +27,17 @@ class Split(db.Model):
         return {
             "id": self.id,
             "title": self.title,
-            "scores": [score.get_msg() for score in self.scores]
+            "scores": [score.get_msg() for score in self.scores],
+            "finished": self.get_finished_count()
         }
 
     def get_mongo_doc(self):
         group = self.get_mongo_group()
         return group.find_one({f'done_{self.id}': False})
+
+    def get_finished_count(self):
+        group = self.get_mongo_group()
+        return group.count({f'done_{self.id}': True})
 
     def get_mongo_doc_by_id(self, doc_id):
         group = self.get_mongo_group()
@@ -144,7 +152,6 @@ class Task(db.Model):
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    # scores = db.relationship('Score', backref='task', lazy='dynamic')
     documents = db.relationship('Document', backref='task', lazy='dynamic')
     splits = db.relationship('Split', backref='task', lazy='dynamic')
 
@@ -210,8 +217,9 @@ class Task(db.Model):
             "weight": self.weight,
             "sum": self.score,
             "is_delete": self.is_delete,
-            # "scores": [score.get_msg() for score in self.scores],
             "url": self.url,
+            "due": self.get_due(),
+            "all": self.count_mongo(),
             "documents": [document.get_msg() for document in self.documents],
             "splits": [split.get_msg() for split in self.splits]        # <-按这个去切
         }
@@ -246,8 +254,20 @@ class Task(db.Model):
             "title": self.title,
             "begin_at": datetime.datetime.timestamp(self.begin_at),
             "deadline": datetime.datetime.timestamp(self.deadline),
-            "state": self.get_status()
+            "state": self.get_status(),
+            "due": self.get_due(),
+            "all": self.count_mongo(),
         }
+
+    def get_due(self):
+        if self.team_type == 0:
+            auth = db.session.query(Auth).filter_by(name="Student").first()
+            return auth.users.count()
+        elif self.team_type == 1:
+            return db.session.query(Pair).count()
+        elif self.team_type == 2:
+            return db.session.query(Pair).count()
+        return -1
 
     def get_status(self):
         now = datetime.datetime.now()
