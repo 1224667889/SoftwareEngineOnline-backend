@@ -4,6 +4,7 @@ from . import admin
 from flask import request
 from servers import homeworks
 from utils.middleware import login_required
+from utils.split import send_shell
 from utils import serialization
 import datetime
 
@@ -27,6 +28,9 @@ def new_homework(login_user: User):
         title = request.json.get("title")
         if not title:
             return serialization.make_resp({"error_msg": "未填写标题"}, code=400)
+        url = request.json.get("url")
+        if not url:
+            return serialization.make_resp({"error_msg": "未填写博客链接"}, code=400)
         team_type = int(request.json.get("team_type"))     # 0:单人;1:结对;2:团队
         if team_type > 2 or team_type < 0:
             return serialization.make_resp({"error_msg": "作业类型错误"}, code=400)
@@ -44,6 +48,7 @@ def new_homework(login_user: User):
     splits = request.json.get("splits").split(",")
     documents = [homeworks.find_document_u_name(u_name) for u_name in document_u_name_list]
     task, err = homeworks.create_homework(
+        url,
         title,
         team_type,
         begin_at,
@@ -57,6 +62,14 @@ def new_homework(login_user: User):
     )
     if err:
         return serialization.make_resp({"error_msg": "上传错误:" + str(err)}, code=500)
+    err = send_shell(
+        task.id,
+        task.url,
+        datetime.datetime.timestamp(task.begin_at),
+        datetime.datetime.timestamp(task.over_at)
+    )
+    if err:
+        return serialization.make_resp({"error_msg": "爬虫启动失败:" + str(err)}, code=500)
     return serialization.make_resp({"task": task.get_msg()}, code=200)
 
 

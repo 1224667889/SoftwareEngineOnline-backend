@@ -17,7 +17,8 @@ class User(db.Model):
 
     name = db.Column(db.String(16))
 
-    auths = db.relationship('Auth', backref='users', secondary=users_auths, lazy='dynamic')
+    auths = db.relationship('Auth', backref=db.backref('users', lazy='dynamic'), lazy='dynamic',
+                            secondary=users_auths)
     notices = db.relationship('Notice', backref='user', lazy='dynamic')
     tasks = db.relationship('Task', backref='user', lazy='dynamic')
 

@@ -4,7 +4,8 @@ import datetime
 from models.users import User
 
 
-def create_homework(title: str,
+def create_homework(url: str,
+                    title: str,
                     team_type: int,
                     begin_at: datetime,
                     deadline: datetime,
@@ -15,7 +16,7 @@ def create_homework(title: str,
                     scores: list,
                     host: User):
     task = Task()
-    return task, task.add(title, team_type, begin_at, deadline, over_at, weight, documents, splits, scores, host)
+    return task, task.add(url, title, team_type, begin_at, deadline, over_at, weight, documents, splits, scores, host)
 
 
 def upload_document(file):

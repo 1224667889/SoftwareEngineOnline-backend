@@ -12,43 +12,16 @@ from utils.middleware import login_required
 
 # 用户名单导入
 @admin.route("/students/upload", methods=['POST'])
-# @login_required("SuperAdmin")
+@login_required("SuperAdmin")
 def students_upload():
-    # 测试代码
-    from models.pairs import Pair
-    from models.homeworks import Task, Document, Score
-    from models.teams import Team
-    from models.proportions import TeamProportion, PairProportion
-    db.drop_all()
-    db.create_all()
-    from models.auths import Auth
-    Auth().add("SuperAdmin", "老板")
-    Auth().add("Admin", "管理员")          # 我们
-    # Auth().add("Group Leader", "组长")     # 小组组长
-    Auth().add("Student", "学生")          # 所有学生（包括我们）
-    User().add("66666666", "老板", auth_name="SuperAdmin")
-    # # <test>
-    # User().add("00000001", "test")
-    # User().add("00000002", "test")
-    # User().add("00000003", "test")
-    # from models.teams import Team
-    # t = Team()
-    # t.add(users.find_by_student_id("00000001"), "key_value_team")
-    # # t.join(users.find_by_student_id("66666666"))
-    # t.join(users.find_by_student_id("00000002"))
-    # t.join(users.find_by_student_id("00000003"))
-    # print("队长:", t.get_captain())
-    # print([student.get_msg() for student in t.get_students()])
-    # print([p.get_msg() for p in t.proportions])
-    # # t.delete()
-    # from models.pairs import Pair
-    # p = Pair()
-    # p.add(users.find_by_student_id("66666666"), "key_value_pair")
-    # p.join(users.find_by_student_id("00000001"))
-    # print(p.join(users.find_by_student_id("00000002")))
-    # print([i.get_msg() for i in p.proportions])
-    # # <!test>
-
+    # 重置数据库
+    # db.drop_all()
+    # db.create_all()
+    # from models.auths import Auth
+    # Auth().add("SuperAdmin", "老板")
+    # Auth().add("Admin", "管理员")          # 我们
+    # Auth().add("Student", "学生")          # 所有学生（包括我们）
+    # User().add("66666666", "老板", auth_name="SuperAdmin")
     try:
         file = request.files['file']
         data = xlrd.open_workbook(file_contents=file.read())

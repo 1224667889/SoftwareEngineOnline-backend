@@ -2,6 +2,7 @@ from app import db
 from utils import serialization
 from utils.middleware import generate_token
 from models.users import User
+from models.auths import Auth
 from sqlalchemy import or_
 
 
@@ -18,7 +19,8 @@ def find_by_student_id(student_id):
 
 
 def find_by_page(page_number=1, page_size=10, keyword=""):
-    pagination = User.query. \
+    auth = db.session.query(Auth).filter_by(name="Student").first()
+    pagination = auth.users. \
         filter(
             or_(
                 User.name.like(f'%{keyword}%'),

@@ -2,7 +2,7 @@
 from models.users import User
 from . import admin
 from servers import homeworks, users
-from utils.middleware import login_required
+from utils.middleware import login_required, spider_jwt
 from utils import serialization
 from flask import request, make_response
 import time
@@ -84,6 +84,7 @@ def homework_mark(login_user: User, task_id, split_id):
 
 # 上传作业数据
 @admin.route("/homework/upload", methods=['POST'])
+@spider_jwt
 def upload_task_auto():
     task = request.json
     data_list = list(task["data"])

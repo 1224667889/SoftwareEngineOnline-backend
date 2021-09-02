@@ -137,6 +137,7 @@ class Task(db.Model):
     begin_at = db.Column(db.DateTime, index=True, default=datetime.datetime.now())      # 开始时间
     deadline = db.Column(db.DateTime, index=True, default=datetime.datetime.now())      # 结束时间
     over_at = db.Column(db.DateTime, index=True, default=datetime.datetime.now())       # 公示时间
+    url = db.Column(db.String(255))                 # 博客地址
     is_delete = db.Column(db.Boolean, default=False)    # 是否删除（软删除）
     weight = db.Column(db.Integer, default=0)       # 权重
     score = db.Column(db.Integer)                   # 总分：冗余减少计算量
@@ -147,7 +148,9 @@ class Task(db.Model):
     documents = db.relationship('Document', backref='task', lazy='dynamic')
     splits = db.relationship('Split', backref='task', lazy='dynamic')
 
-    def add(self, title: str,
+    def add(self,
+            url: str,
+            title: str,
             team_type: int,
             begin_at: datetime,
             deadline: datetime,
@@ -158,6 +161,7 @@ class Task(db.Model):
             scores: list,
             host: User,
             commit=True):
+        self.url = url
         self.title = title
         self.team_type = team_type
         self.begin_at = begin_at
@@ -207,6 +211,7 @@ class Task(db.Model):
             "sum": self.score,
             "is_delete": self.is_delete,
             # "scores": [score.get_msg() for score in self.scores],
+            "url": self.url,
             "documents": [document.get_msg() for document in self.documents],
             "splits": [split.get_msg() for split in self.splits]        # <-按这个去切
         }

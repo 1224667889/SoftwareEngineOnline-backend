@@ -4,7 +4,7 @@ import functools
 
 from servers import users
 from utils import serialization
-from config import SECRET_KEY
+from config import SECRET_KEY, spider_token
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from itsdangerous import BadSignature, SignatureExpired
 
@@ -43,6 +43,19 @@ def login_required(*auths_need):
             return func(user, *args, **kw)
         return wrapper
     return decorator
+
+
+def spider_jwt(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwags):
+        token = request.headers["Authorization"].split()[-1]
+        if token != spider_token:
+            return {
+                "code": 401,
+                "msg": "权限不足"
+            }
+        return func(*args, **kwags)
+    return wrapper
 
 
 def generate_token(user, expiration=864000):
