@@ -1,12 +1,12 @@
 """生成flask_app"""
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from config import dbConfig, SECRET_KEY
+from config import dbConfig, SECRET_KEY, mongoConfig
 import pymongo
 
 
 db = SQLAlchemy()
-mongoCli = pymongo.MongoClient('mongodb://localhost:27017/')
+mongoCli = pymongo.MongoClient(f'mongodb://{mongoConfig["host"]}:{mongoConfig["port"]}/')
 
 
 def create_app(debug=False):

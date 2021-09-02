@@ -6,7 +6,12 @@ dbConfig = {
     'database': 'software',
 }
 
-spider_url = "http://172.17.173.97:8000/api/"
+mongoConfig = {
+    "host": "124.71.105.78",
+    "port": "8500"
+}
+
+spider_url = "http://172.17.173.97:8001/api/task/add"
 spider_token = "abaa3286-7877-523c-8fd1-105332c7e991"
 
 allowed_documents = [
