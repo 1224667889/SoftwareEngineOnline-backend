@@ -271,14 +271,14 @@ class Task(db.Model):
 
     def get_status(self):
         now = datetime.datetime.now()
-        if self.begin_at < now:
+        if now < self.begin_at:
             return 0
-        elif self.deadline < now:
+        elif now < self.deadline:
             return 1
-        elif self.over_at < now:
+        elif now < self.over_at:
             return 2
         else:
-            return 0
+            return 3
 
     def change_state(self):
         try:
@@ -347,17 +347,22 @@ class Task(db.Model):
         group = self.get_mongo_group()
         doc = group.find_one({"id": doc_id})
         if doc:
-            return doc, doc["scores"]
-        return None, None
+            return doc, doc["scores"], doc["task"]["delay"]
+        return None, None, None
+
+    def get_all_rank(self):
+        group = self.get_mongo_group()
+        doc_list = list(group.find())
+        return sorted(doc_list, key=lambda d: d["sum"], reverse=True)
 
     def get_doc_rank(self, doc_id):
         group = self.get_mongo_group()
         doc = group.find_one({"id": doc_id})
         if not doc:
-            return None, None, None, None
+            return None, None, None, None, None
         doc_list = list(group.find())
         doc_list = sorted(doc_list, key=lambda d: d["sum"], reverse=True)
-        return doc, doc["scores"], doc_list.index(doc), len(doc_list)
+        return doc, doc["scores"], doc["task"]["delay"], doc_list.index(doc), len(doc_list)
 
     def get_all_scores(self):
         group = self.get_mongo_group()
@@ -377,5 +382,17 @@ class Task(db.Model):
             return None
         return task_team.name
 
+    def get_task_team_by_user(self, user: User):
+        if self.team_type == 0:
+            # 个人作业
+            return user
+        elif self.team_type == 1:
+            # 结对作业
+            return user.pair
+        elif self.team_type == 2:
+            # 团队作业
+            return user.team
+        else:
+            return 0
 
 

@@ -4,6 +4,7 @@ from . import admin
 from servers import homeworks, users
 from utils.middleware import login_required, spider_jwt
 from utils import serialization
+from utils.delays import delays_msg, delays_rate
 from flask import request, make_response
 import time
 from utils.split import parse_blog
@@ -75,7 +76,7 @@ def homework_mark(login_user: User, task_id, split_id):
             sum_score = 0
             for score_doc in doc["scores"].values():
                 sum_score += score_doc["score"]
-            doc["sum"] = sum_score
+            doc["sum"] = sum_score * delays_rate[int(doc["task"]["delay"])]
 
     except Exception as e:
         return serialization.make_resp({"error_msg": f"参数错误:{e}"}, code=400)
@@ -86,7 +87,7 @@ def homework_mark(login_user: User, task_id, split_id):
     }, code=200)
 
 
-# 上传作业数据
+# 上传作业数据 - 爬虫自动化
 @admin.route("/homework/upload", methods=['POST'])
 @spider_jwt
 def upload_task_auto():
@@ -100,17 +101,7 @@ def upload_task_auto():
         user = users.find_by_student_id(student_id)
         if not user:
             return serialization.make_resp({"error_msg": "用户不存在"}, code=404)
-        if t.team_type == 0:
-            # 个人作业
-            task_team = user
-        elif t.team_type == 1:
-            # 结对作业
-            task_team = user.pair
-        elif t.team_type == 2:
-            # 团队作业
-            task_team = user.team
-        else:
-            return serialization.make_resp({"error_msg": "作业格式错误"}, code=400)
+        task_team = t.get_task_team_by_user(user)
         if not task_team:
             return serialization.make_resp({"error_msg": "查询不到队伍信息"}, code=404)
         t.save_mongo_doc(task_team.id, data)
@@ -136,21 +127,22 @@ def homework_download(login_user: User, task_id):
         for i, score in enumerate(scores):
             table.write(0, i + 1, f'{score.point}({score.max})')
             table.write(1, i + 1, f'{score.description}')
-        table.write(0, len(scores) + 1, f'总计({task.score})')
+        table.write(1, len(scores) + 1, f'迟交情况')
+        table.write(0, len(scores) + 2, f'总计({task.score})')
         for row, doc in enumerate(list(scores_list)):
             table.write(row + 2, 0, f'{task.get_team_name_by_id(doc["id"])}')
             for col, score in enumerate(doc["scores"].values()):
                 table.write(row + 2, col + 1, f'{score["score"]}')
-            table.write(row + 2, len(scores) + 1, f'{doc["sum"]}')
+            table.write(row + 2, len(scores) + 1, f'{delays_msg[int(doc["task"]["delay"])]}')
+            table.write(row + 2, len(scores) + 2, f'{doc["sum"]}')
         workbook.close()
         filename = f"{task.title}-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.xlsx"
         file = make_response(out.getvalue())
         out.close()
         file.headers['Content-Type'] = "application/vnd.ms-excel"
         file.headers["Cache-Control"] = "no-cache"
-        file.headers['Content-Disposition'] = "attachment; filename*=%s" % \
+        file.headers['Content-Disposition'] = "attachment; filename=%s" % \
                                               filename.encode("utf-8").decode("latin1")
         return file
     except Exception as e:
         return serialization.make_resp({"error_msg": f"下载失败:{e}"}, code=500)
-

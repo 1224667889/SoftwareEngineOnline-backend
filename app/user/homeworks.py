@@ -72,12 +72,15 @@ def homework_score_student(login_user: User, task_id):
         return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
     if task.get_status() < 2:
         return serialization.make_resp({"error_msg": "结果未开放"}, code=401)
-    doc_id = request.args.get("id", 0, type=int)
-    doc, scores = task.get_doc_scores(doc_id)
+    task_team = task.get_task_team_by_user(login_user)
+    if not task_team:
+        return serialization.make_resp({"error_msg": "查询不到队伍信息"}, code=404)
+    doc, scores, delay = task.get_doc_scores(task_team.id)
     if not scores:
         return serialization.make_resp({"error_msg": "未找到作业记录"}, code=404)
     return serialization.make_resp({
         "scores": list(scores.values()),
+        "delay": int(delay),
         "max": doc["max"],
         "sum": doc["sum"],
     }, code=200)
@@ -92,8 +95,10 @@ def homework_rank_student(login_user: User, task_id):
         return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
     if task.get_status() < 2:
         return serialization.make_resp({"error_msg": "结果未开放"}, code=401)
-    doc_id = request.args.get("id", 0, type=int)
-    doc, scores, rank_num, total_num = task.get_doc_rank(doc_id)
+    task_team = task.get_task_team_by_user(login_user)
+    if not task_team:
+        return serialization.make_resp({"error_msg": "查询不到队伍信息"}, code=404)
+    doc, scores, delay, rank_num, total_num = task.get_doc_rank(task_team.id)
     if not doc:
         return serialization.make_resp({"error_msg": "未找到作业记录"}, code=404)
     return serialization.make_resp({
@@ -101,6 +106,25 @@ def homework_rank_student(login_user: User, task_id):
         "scores": list(scores.values()),
         "rank_num": rank_num + 1,
         "total_num": total_num,
+        "delay": int(delay),
         "sum": doc["sum"],
         "max": doc["max"]
+    }, code=200)
+
+
+# 查询作业提交情况
+@user.route("/homework/<string:task_id>/upload", methods=['GET'])
+@login_required("SuperAdmin", "Admin", "Student")
+def check_homework_student(login_user: User, task_id):
+    task = homeworks.find_by_id(task_id)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    task_team = task.get_task_team_by_user(login_user)
+    if not task_team:
+        return serialization.make_resp({"error_msg": "查询不到队伍信息"}, code=404)
+    doc = task.get_mongo_group().find_one({"id": task_team.id})
+    if not doc:
+        return serialization.make_resp({"error_msg": "未找到作业记录"}, code=404)
+    return serialization.make_resp({
+        "url": doc["task"]["url"],
     }, code=200)

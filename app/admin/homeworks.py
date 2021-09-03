@@ -135,3 +135,45 @@ def homework_change_weight(login_user: User, task_id):
     return serialization.make_resp({"task": task.get_msg()}, code=200)
 
 
+# 查询排名
+@admin.route("/homework/<string:task_id>/rank", methods=['GET'])
+@login_required("SuperAdmin", "Admin", "Student")
+def homework_rank_admin(login_user: User, task_id):
+    task = homeworks.find_by_id(task_id)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    ranks = []
+    for doc in task.get_all_rank():
+        ranks.append({
+            "id": doc["id"],
+            "max": doc["max"],
+            "sum": doc["sum"],
+            "scores": doc["scores"],
+            "delay": doc["task"]["delay"]
+        })
+    return serialization.make_resp({
+        "ranks": ranks,
+    }, code=200)
+
+
+# 查询作业得分
+@admin.route("/homework/<string:task_id>/result", methods=['GET'])
+@login_required("SuperAdmin", "Admin", "Student")
+def homework_score_student(login_user: User, task_id):
+    task = homeworks.find_by_id(task_id)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    if task.get_status() < 2:
+        return serialization.make_resp({"error_msg": "结果未开放"}, code=401)
+    doc_id = request.args.get("id", 0, type=int)
+    doc, scores, delay = task.get_doc_scores(doc_id)
+    if not scores:
+        return serialization.make_resp({"error_msg": "未找到作业记录"}, code=404)
+    return serialization.make_resp({
+        "scores": list(scores.values()),
+        "delay": int(delay),
+        "max": doc["max"],
+        "sum": doc["sum"],
+    }, code=200)
+
+
