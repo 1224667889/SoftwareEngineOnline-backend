@@ -48,10 +48,10 @@ def send_shell(task_id, url, begin_at, over_at):
         "end_at": over_at
     }
     headers = {
-        "Content-Type": "multipart/form-data;",
+        # "Content-Type": "multipart/form-data;",
         "Authorization": spider_token
     }
     resp = requests.post(spider_url, data=data, headers=headers)
-    if dict(resp.text)["code"] != 200:
-        return dict(resp.text)["msg"]
+    if resp.status_code != 200:
+        return resp.text
     return None
