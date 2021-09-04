@@ -13,15 +13,15 @@ from utils.middleware import login_required
 # 用户名单导入
 @admin.route("/students/upload", methods=['POST'])
 @login_required("SuperAdmin")
-def students_upload():
+def students_upload(login_user: User):
     # 重置数据库
-    # db.drop_all()
-    # db.create_all()
-    # from models.auths import Auth
-    # Auth().add("SuperAdmin", "老板")
-    # Auth().add("Admin", "管理员")          # 我们
-    # Auth().add("Student", "学生")          # 所有学生（包括我们）
-    # User().add("66666666", "老板", auth_name="SuperAdmin")
+    db.drop_all()
+    db.create_all()
+    from models.auths import Auth
+    Auth().add("SuperAdmin", "老板")
+    Auth().add("Admin", "管理员")          # 我们
+    Auth().add("Student", "学生")          # 所有学生（包括我们）
+    User().add("66666666", "老板", auth_name="SuperAdmin")
     try:
         file = request.files['file']
         data = xlrd.open_workbook(file_contents=file.read())
