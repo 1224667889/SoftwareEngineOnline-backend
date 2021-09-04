@@ -11,6 +11,7 @@ from utils.split import parse_blog
 import xlsxwriter
 from io import BytesIO
 import datetime
+from utils.logger import logger
 
 
 # 返回分割点
@@ -97,13 +98,19 @@ def upload_task_auto():
         task_id, student_id, data = d["task_id"], d["student_id"], d["data"]
         t = homeworks.find_by_id(task_id)
         if not t:
-            return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+            logger.info("404 作业不存在")
+            continue
+            # return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
         user = users.find_by_student_id(student_id)
         if not user:
-            return serialization.make_resp({"error_msg": "用户不存在"}, code=404)
+            logger.info(f"404 用户不存在 student_id:{student_id}")
+            continue
+            # return serialization.make_resp({"error_msg": "用户不存在"}, code=404)
         task_team = t.get_task_team_by_user(user)
         if not task_team:
-            return serialization.make_resp({"error_msg": "查询不到队伍信息"}, code=404)
+            logger.info("404 查询不到队伍信息")
+            continue
+            # return serialization.make_resp({"error_msg": "查询不到队伍信息"}, code=404)
         t.save_mongo_doc(task_team.id, data)
     return serialization.make_resp({"msg": "提交成功"}, code=200)
 
