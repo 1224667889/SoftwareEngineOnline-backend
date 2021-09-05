@@ -164,7 +164,7 @@ def homework_score_student(login_user: User, task_id):
     task = homeworks.find_by_id(task_id)
     if not task:
         return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
-    if task.get_status() < 2:
+    if task.get_status() < 3:
         return serialization.make_resp({"error_msg": "结果未开放"}, code=401)
     doc_id = request.args.get("id", 0, type=int)
     doc, scores, delay = task.get_doc_scores(doc_id)

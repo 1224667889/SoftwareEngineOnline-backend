@@ -271,7 +271,7 @@ class Task(db.Model):
         return -1
 
     def get_status(self):
-        now = time.time()
+        now = datetime.datetime.now()
         if now < self.begin_at:
             return 0
         elif now < self.deadline:

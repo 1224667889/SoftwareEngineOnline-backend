@@ -71,7 +71,7 @@ def homework_score_student(login_user: User, task_id):
     task = homeworks.find_by_id(task_id)
     if not task:
         return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
-    if task.get_status() < 2:
+    if task.get_status() < 3:
         return serialization.make_resp({"error_msg": "结果未开放"}, code=401)
     task_team = task.get_task_team_by_user(login_user)
     if not task_team:
@@ -94,7 +94,7 @@ def homework_rank_student(login_user: User, task_id):
     task = homeworks.find_by_id(task_id)
     if not task:
         return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
-    if task.get_status() < 2:
+    if task.get_status() < 3:
         return serialization.make_resp({"error_msg": "结果未开放"}, code=401)
     task_team = task.get_task_team_by_user(login_user)
     if not task_team:
