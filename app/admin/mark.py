@@ -41,8 +41,10 @@ def homework_split_detail(login_user: User, task_id, split_id):
     doc = sp.get_mongo_doc()
     if not doc:
         return serialization.make_resp({"error_msg": "该作业不存在"}, code=404)
-    html = doc["task"]["html"]
-    return serialization.make_resp({"split": sp.get_msg(), "html": parse_blog([sp.title], html).get(sp.title, "")}, code=200)
+    html = parse_blog([sp.title], doc["task"]["html"]).get(sp.title, "")
+    if not html:
+        html = "<body>未找到该标题</body>"
+    return serialization.make_resp({"split": sp.get_msg(), "html": html, "id": doc["id"]}, code=200)
 
 
 # 提交批改
@@ -60,7 +62,7 @@ def homework_mark(login_user: User, task_id, split_id):
         doc_id = scores_json["id"]
         doc = sp.get_mongo_doc_by_id(doc_id)
         if not doc:
-            return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+            return serialization.make_resp({"error_msg": "作业提交记录不存在"}, code=404)
         scores_list = list(scores_json.get("scores"))
     except Exception as e:
         return serialization.make_resp({"error_msg": "参数错误"}, code=400)
