@@ -42,8 +42,8 @@ def parse_blog(targets, blog):
 
 def send_shell(task_id, url, begin_at, over_at):
     data = {
-        "id": url,
-        "task_id": task_id,
+        "id": task_id,
+        "task_id": url,
         "start_at": begin_at,
         "end_at": over_at
     }
