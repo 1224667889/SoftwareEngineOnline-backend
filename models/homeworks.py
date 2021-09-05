@@ -31,7 +31,7 @@ class Split(db.Model):
             "finished": self.get_finished_count()
         }
 
-    def get_mongo_doc(self):
+    def get_mongo_doc_unfinished(self):
         group = self.get_mongo_group()
         return group.find_one({f'done_{self.id}': False})
 

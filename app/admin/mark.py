@@ -35,16 +35,31 @@ def homework_split_detail(login_user: User, task_id, split_id):
     task = homeworks.find_by_id(task_id)
     if not task:
         return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
-    sp = task.splits.filter_by(id=split_id).first()
+    if split_id == "0":
+        sp = task.splits.first()
+    else:
+        sp = task.splits.filter_by(id=split_id).first()
     if not sp:
         return serialization.make_resp({"error_msg": "分块不存在"}, code=404)
-    doc = sp.get_mongo_doc()
+    doc = sp.get_mongo_doc_unfinished()
     if not doc:
-        return serialization.make_resp({"error_msg": "该作业不存在"}, code=404)
+        return serialization.make_resp({"error_msg": "已经没有未批改的作业了"}, code=404)
     html = parse_blog([sp.title], doc["task"]["html"]).get(sp.title, "")
     if not html:
         html = "<body>未找到该标题</body>"
     return serialization.make_resp({"split": sp.get_msg(), "html": html, "id": doc["id"]}, code=200)
+
+
+@admin.route("/homework/blog/<string:task_id>/<int:team_id>", methods=['GET'])
+@login_required("SuperAdmin", "Admin")
+def homework_all_blog(login_user: User, task_id, team_id):
+    task = homeworks.find_by_id(task_id)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    doc = task.get_mongo_group().find_one({'id': team_id})
+    if not doc:
+        return serialization.make_resp({"error_msg": "未找到提交记录"}, code=404)
+    return serialization.make_resp({"html": doc["task"]["html"]}, code=200)
 
 
 # 提交批改
