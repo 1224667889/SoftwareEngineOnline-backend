@@ -33,6 +33,6 @@ def remove_auth_by_name(student, auth_name):
         return serialization.make_resp({"error_msg": "用户无该权限"}, code=404)
     err = student.remove_auth(auth)
     if err:
-        return serialization.make_resp({"error_msg": "添加失败"}, code=500)
-    return serialization.make_resp({"msg": "添加成功"}, code=200)
+        return serialization.make_resp({"error_msg": "删除失败"}, code=500)
+    return serialization.make_resp({"msg": "删除成功"}, code=200)
 

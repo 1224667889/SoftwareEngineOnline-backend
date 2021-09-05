@@ -70,8 +70,12 @@ def check_users_detail(login_user: User):
     page_number = request.args.get('page_number', 1, type=int)
     page_size = request.args.get('page_size', 10, type=int)
     keyword = request.args.get('keyword', "")
-    students, total_page = users.find_by_page(page_number, page_size, keyword)
-    return serialization.make_resp({"students": [student.get_msg() for student in students], "total_page": total_page},
+    students, total_page, num = users.find_by_page(page_number, page_size, keyword)
+    return serialization.make_resp({
+        "students": [student.get_msg() for student in students],
+        "total_page": total_page,
+        "num": num
+    },
                                    code=200)
 
 

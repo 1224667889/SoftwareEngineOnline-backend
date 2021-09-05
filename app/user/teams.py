@@ -17,6 +17,7 @@ def get_team(login_user: User):
         return serialization.make_resp({"error_msg": "未加入队伍"}, code=40004)
     return serialization.make_resp(login_user.team.get_msg(), code=200)
 
+
 # 创建队伍
 @user.route('/team', methods=['POST'])
 @login_required("Student")

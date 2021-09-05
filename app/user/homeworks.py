@@ -43,11 +43,12 @@ def homework_index(login_user: User):
     page_size = request.args.get('page_size', 10, type=int)
     team_type = request.args.get("team_type", -1, type=int)
     keyword = request.args.get('keyword', "")
-    tasks, total_page = homeworks.find_by_team_type_page(team_type, page_number, page_size, keyword, False)
+    tasks, total_page, num = homeworks.find_by_team_type_page(team_type, page_number, page_size, keyword, False)
     return serialization.make_resp(
         {
             "tasks": [task.get_index() for task in tasks],
-            "total_page": total_page
+            "total_page": total_page,
+            "num": num
         },
         code=200
     )

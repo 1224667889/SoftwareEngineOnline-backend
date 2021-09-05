@@ -20,15 +20,15 @@ def find_by_student_id(student_id):
 
 def find_by_page(page_number=1, page_size=10, keyword=""):
     auth = db.session.query(Auth).filter_by(name="Student").first()
-    pagination = auth.users. \
+    users = auth.users. \
         filter(
             or_(
                 User.name.like(f'%{keyword}%'),
                 User.student_id.like(f'%{keyword}%')
             )
-        ).\
-        paginate(page_number, per_page=page_size)
-    return pagination.items, pagination.pages
+        )
+    pagination = users.paginate(page_number, per_page=page_size)
+    return pagination.items, pagination.pages, users.count()
 
 
 def find_all():

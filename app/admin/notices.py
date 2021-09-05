@@ -45,8 +45,11 @@ def index_history_notices(login_user: User):
     page_number = request.args.get('page_number', 1, type=int)
     page_size = request.args.get('page_size', 10, type=int)
 
-    history_notices, total_page = notices.get_history(page_number, page_size)
-    return serialization.make_resp(
-        {"notices": [history_notice.get_msg() for history_notice in history_notices], "total_page": total_page},
+    history_notices, total_page, num = notices.get_history(page_number, page_size)
+    return serialization.make_resp({
+        "notices": [history_notice.get_msg() for history_notice in history_notices],
+        "total_page": total_page,
+        "num": num
+    },
         code=200
     )

@@ -23,7 +23,7 @@ def find_by_user_read(user: User, read=-1, page_number=1, page_size=10):
     if read != -1:
         notices = notices.filter_by(read=read)
     pagination = notices.paginate(page_number, per_page=page_size)
-    return pagination.items, pagination.pages
+    return pagination.items, pagination.pages, notices.count()
 
 
 def broadcast(title, message, host):
@@ -57,7 +57,7 @@ def send(student_id, title, message, host):
 def get_history(page_number=1, page_size=10):
     """获取消息发送历史"""
     pagination = HistoryNotice.query.paginate(page_number, per_page=page_size)
-    return pagination.items, pagination.pages
+    return pagination.items, pagination.pages, HistoryNotice.query.count()
 
 
 def find_history_by_id(history_notice_id):

@@ -40,8 +40,11 @@ def index_notices(login_user: User):
     page_number = request.args.get('page_number', 1, type=int)
     page_size = request.args.get('page_size', 10, type=int)
 
-    notices_, total_page = notices.find_by_user_read(login_user, read, page_number, page_size)
-    return serialization.make_resp(
-        {"notices": [notice.get_msg() for notice in notices_], "total_page": total_page},
+    notices_, total_page, num = notices.find_by_user_read(login_user, read, page_number, page_size)
+    return serialization.make_resp({
+        "notices": [notice.get_msg() for notice in notices_],
+        "total_page": total_page,
+        "num": num
+    },
         code=200
     )

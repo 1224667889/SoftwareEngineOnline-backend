@@ -7,6 +7,7 @@ from models.users import User
 from models.auths import Auth
 from models.pairs import Pair
 from models.teams import Team
+import time
 from app import mongoCli
 from servers import users, pairs, teams
 
@@ -266,11 +267,11 @@ class Task(db.Model):
         elif self.team_type == 1:
             return db.session.query(Pair).count()
         elif self.team_type == 2:
-            return db.session.query(Pair).count()
+            return db.session.query(Team).count()
         return -1
 
     def get_status(self):
-        now = datetime.datetime.now()
+        now = time.time()
         if now < self.begin_at:
             return 0
         elif now < self.deadline:
@@ -394,5 +395,19 @@ class Task(db.Model):
             return user.team
         else:
             return 0
+
+    def get_team_msg_by_id(self, team_id):
+        if self.team_type == 0:
+            # 个人作业
+            task_team = users.find_by_id(team_id)
+        elif self.team_type == 1:
+            # 结对作业
+            task_team = pairs.find_by_id(team_id)
+        elif self.team_type == 2:
+            # 团队作业
+            task_team = teams.find_by_id(team_id)
+        else:
+            return None, None
+        return task_team.get_msg(), self.team_type
 
 

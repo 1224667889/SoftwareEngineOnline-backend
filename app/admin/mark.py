@@ -50,6 +50,7 @@ def homework_split_detail(login_user: User, task_id, split_id):
     return serialization.make_resp({"split": sp.get_msg(), "html": html, "id": doc["id"]}, code=200)
 
 
+# 获取完整文档 - url
 @admin.route("/homework/blog/<string:task_id>/<int:team_id>", methods=['GET'])
 @login_required("SuperAdmin", "Admin")
 def homework_all_blog(login_user: User, task_id, team_id):
@@ -59,7 +60,26 @@ def homework_all_blog(login_user: User, task_id, team_id):
     doc = task.get_mongo_group().find_one({'id': team_id})
     if not doc:
         return serialization.make_resp({"error_msg": "未找到提交记录"}, code=404)
-    return serialization.make_resp({"html": doc["task"]["html"]}, code=200)
+    return serialization.make_resp({
+        "html": doc["task"]["html"],
+        "url": doc["task"]["url"]
+    }, code=200)
+
+
+# 获取队伍信息
+@admin.route("/homework/team/<string:task_id>/<int:team_id>", methods=['GET'])
+@login_required("SuperAdmin", "Admin")
+def team_msg_by_task(login_user: User, task_id, team_id):
+    task = homeworks.find_by_id(task_id)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    msg, team_type = task.get_team_msg_by_id(team_id)
+    if not msg:
+        return serialization.make_resp({"error_msg": "未找到队伍信息"}, code=404)
+    return serialization.make_resp({
+        "msg": msg,
+        "team_type": team_type
+    }, code=200)
 
 
 # 提交批改
@@ -109,26 +129,18 @@ def homework_mark(login_user: User, task_id, split_id):
 @admin.route("/homework/upload", methods=['POST'])
 @spider_jwt
 def upload_task_auto():
-    task = request.json
-    data_list = list(task["data"])
-    for d in data_list:
-        task_id, student_id, data = d["task_id"], d["student_id"], d["data"]
-        t = homeworks.find_by_id(task_id)
-        if not t:
-            logger.info("404 作业不存在")
-            continue
-            # return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
-        user = users.find_by_student_id(student_id)
-        if not user:
-            logger.info(f"404 用户不存在 student_id:{student_id}")
-            continue
-            # return serialization.make_resp({"error_msg": "用户不存在"}, code=404)
-        task_team = t.get_task_team_by_user(user)
-        if not task_team:
-            logger.info("404 查询不到队伍信息")
-            continue
-            # return serialization.make_resp({"error_msg": "查询不到队伍信息"}, code=404)
-        t.save_mongo_doc(task_team.id, data)
+    d = request.json
+    task_id, student_id, data = d["task_id"], d["student_id"], d["data"]
+    t = homeworks.find_by_id(task_id)
+    if not t:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    user = users.find_by_student_id(student_id)
+    if not user:
+        return serialization.make_resp({"error_msg": "用户不存在"}, code=404)
+    task_team = t.get_task_team_by_user(user)
+    if not task_team:
+        return serialization.make_resp({"error_msg": "查询不到队伍信息"}, code=404)
+    t.save_mongo_doc(task_team.id, data)
     return serialization.make_resp({"msg": "提交成功"}, code=200)
 
 

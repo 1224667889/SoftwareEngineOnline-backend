@@ -92,7 +92,7 @@ def homework_index_admin(login_user: User):
     team_type = request.args.get("team_type", -1, type=int)
     keyword = request.args.get('keyword', "")
     is_delete = request.args.get('is_delete', -1, type=int)
-    tasks, total_page = homeworks.find_by_team_type_page(
+    tasks, total_page, num = homeworks.find_by_team_type_page(
         team_type,
         page_number,
         page_size,
@@ -102,7 +102,8 @@ def homework_index_admin(login_user: User):
     return serialization.make_resp(
         {
             "tasks": [task.get_index() for task in tasks],
-            "total_page": total_page
+            "total_page": total_page,
+            "num": num
         },
         code=200
     )

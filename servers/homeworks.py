@@ -63,5 +63,5 @@ def find_by_team_type_page(team_type, page_number=1, page_size=10, keyword="", i
     pagination = tasks.\
         filter(Task.title.like(f'%{keyword}%')).\
         paginate(page_number, per_page=page_size)
-    return pagination.items, pagination.pages
+    return pagination.items, pagination.pages, tasks.count()
 
