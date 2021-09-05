@@ -30,9 +30,10 @@ def refresh_token(login_user: User):
 def change_password(login_user: User):
     old_password = request.form.get("old_password")
     new_password = request.form.get("new_password")
-    if check_password(new_password):
-        return serialization.make_resp(
-            {"error_msg": "密码只能由数字、大小写字母以及特殊符号@$!%*?&.构成，密码长度6~18位"},
+    if not check_password(new_password):
+        return serialization.make_resp({
+            "error_msg": "密码只能由数字、大小写字母以及特殊符号@$!%*?&.构成，密码长度6~18位"
+        },
             code=400)
     if login_user.change_password(old_password, new_password):
         return serialization.make_resp({"error_msg": "身份验证失败"}, code=401)
