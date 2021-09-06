@@ -140,6 +140,8 @@ def upload_task_auto():
     task_team = t.get_task_team_by_user(user)
     if not task_team:
         return serialization.make_resp({"error_msg": "查询不到队伍信息"}, code=404)
+    if t.get_mongo_group().find_one({'id': task_team.id}) and t.get_status() > 1:
+        return serialization.make_resp({"msg": "已经提交，不允许更新"}, code=401)
     t.save_mongo_doc(task_team.id, data)
     return serialization.make_resp({"msg": "提交成功"}, code=200)
 
