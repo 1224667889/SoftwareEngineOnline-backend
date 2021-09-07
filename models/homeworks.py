@@ -36,15 +36,28 @@ class Split(db.Model):
         group = self.get_mongo_group()
         return group.find_one({f'done_{self.id}': False})
 
-    def get_mongo_some_doc_finished(self, page_num=1, page_size=10):
+    def get_mongo_some_doc_finished(self, page_num=1, page_size=10, finished=True):
         group = self.get_mongo_group()
-        docs = group.find({f'done_{self.id}': True})
-        ranks = group.find({f'done_{self.id}': True}) \
-            .skip((page_size-1) * page_num).limit(page_size).sort(f"scores.{self.id}", -1)
-        count = docs.count()
-        page = count // 10
+        if finished:
+            docs = list(group.find({f'done_{self.id}': True}))
+        else:
+            docs = list(group.find())
+        for doc in docs:
+            m = 0
+            s = 0
+            for score in self.scores:
+                m += score.max
+                s += int(doc["scores"][f"{score.id}"]["score"])
+            doc["max"] = m
+            doc["sum"] = s
+        doc_list = sorted(docs, key=lambda d: d["sum"], reverse=True)
+        # ranks = group.find({f'done_{self.id}': True}) \
+        #     .skip((page_size-1) * page_num).limit(page_size).sort(f"scores.{self.id}", -1)
+        count = len(doc_list)
+        page = count // page_size
         if count % page_size:
             page += 1
+        ranks = doc_list[((page_num-1) * page_size): page_size * page_num]
         return ranks, page, count
 
     def get_finished_count(self):

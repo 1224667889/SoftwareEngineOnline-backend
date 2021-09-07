@@ -135,6 +135,7 @@ def check_homework_student(login_user: User, task_id):
 @user.route("/homework/<string:task_id>/<string:split_id>/scores", methods=['GET'])
 @login_required("SuperAdmin", "Admin", "Student")
 def homework_split_rank(login_user: User, task_id, split_id):
+    finished = request.args.get('finished', 1, type=int)
     page_number = request.args.get('page_number', 1, type=int)
     page_size = request.args.get('page_size', 10, type=int)
     task = homeworks.find_by_id(task_id)
@@ -149,10 +150,16 @@ def homework_split_rank(login_user: User, task_id, split_id):
     if not sp:
         return serialization.make_resp({"error_msg": "分块不存在"}, code=404)
     ranks = []
-    docs, page, num = sp.get_mongo_some_doc_finished(page_number, page_size)
+    docs, page, num = sp.get_mongo_some_doc_finished(page_number, page_size, finished)
     for doc in docs:
+        score_list = []
+        for k, v in doc["scores"].items():
+            v["id"] = k
+            score_list.append(v)
         ranks.append({
-            "score": doc["scores"][f"{sp.id}"],
+            "score": score_list,
+            "sum": doc["sum"],
+            "max": doc["max"],
             "id": doc["id"]
         })
     return serialization.make_resp({
