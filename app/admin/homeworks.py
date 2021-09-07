@@ -66,7 +66,7 @@ def new_homework(login_user: User):
         task.id,
         task.url,
         datetime.datetime.timestamp(task.begin_at),
-        datetime.datetime.timestamp(task.over_at)
+        datetime.datetime.timestamp(task.deadline)
     )
     if err:
         return serialization.make_resp({"error_msg": "爬虫启动失败:" + str(err)}, code=500)
@@ -136,30 +136,64 @@ def homework_change_weight(login_user: User, task_id):
     return serialization.make_resp({"task": task.get_msg()}, code=200)
 
 
-# 查询排名
+# 查询所有排名 - 管理员不需要等待公示
 @admin.route("/homework/<string:task_id>/rank", methods=['GET'])
-@login_required("SuperAdmin", "Admin", "Student")
+@login_required("SuperAdmin", "Admin")
 def homework_rank_admin(login_user: User, task_id):
+    page_number = request.args.get('page_number', 1, type=int)
+    page_size = request.args.get('page_size', 10, type=int)
     task = homeworks.find_by_id(task_id)
     if not task:
         return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
     ranks = []
-    for doc in task.get_all_rank():
+    docs, page, num = task.get_all_rank(page_number, page_size)
+    for doc in docs:
         ranks.append({
             "id": doc["id"],
             "max": doc["max"],
             "sum": doc["sum"],
-            "scores": doc["scores"],
+            "scores": list(doc["scores"].values()),
             "delay": doc["task"]["delay"]
         })
     return serialization.make_resp({
+        "num": num,
+        "total_page": page,
+        "ranks": ranks,
+    }, code=200)
+
+
+# 查询所有分块得分 - 管理员不需要等待公示
+@admin.route("/homework/<string:task_id>/<string:split_id>/scores", methods=['GET'])
+@login_required("SuperAdmin", "Admin")
+def homework_split_rank_admin(login_user: User, task_id, split_id):
+    page_number = request.args.get('page_number', 1, type=int)
+    page_size = request.args.get('page_size', 10, type=int)
+    task = homeworks.find_by_id(task_id)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    if split_id == "0":
+        sp = task.splits.first()
+    else:
+        sp = task.splits.filter_by(id=split_id).first()
+    if not sp:
+        return serialization.make_resp({"error_msg": "分块不存在"}, code=404)
+    ranks = []
+    docs, page, num = sp.get_mongo_some_doc_finished(page_number, page_size)
+    for doc in docs:
+        ranks.append({
+            "score": doc["scores"][f"{sp.id}"],
+            "id": doc["id"]
+        })
+    return serialization.make_resp({
+        "num": num,
+        "page": page,
         "ranks": ranks,
     }, code=200)
 
 
 # 查询作业得分
 @admin.route("/homework/<string:task_id>/result", methods=['GET'])
-@login_required("SuperAdmin", "Admin", "Student")
+@login_required("SuperAdmin", "Admin")
 def homework_score_student(login_user: User, task_id):
     task = homeworks.find_by_id(task_id)
     if not task:

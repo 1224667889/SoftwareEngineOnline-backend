@@ -36,6 +36,17 @@ class Split(db.Model):
         group = self.get_mongo_group()
         return group.find_one({f'done_{self.id}': False})
 
+    def get_mongo_some_doc_finished(self, page_num=1, page_size=10):
+        group = self.get_mongo_group()
+        docs = group.find({f'done_{self.id}': True})
+        ranks = group.find({f'done_{self.id}': True}) \
+            .skip((page_size-1) * page_num).limit(page_size).sort(f"scores.{self.id}", -1)
+        count = docs.count()
+        page = count // 10
+        if count % page_size:
+            page += 1
+        return ranks, page, count
+
     def get_finished_count(self):
         group = self.get_mongo_group()
         return group.count({f'done_{self.id}': True})
@@ -351,10 +362,14 @@ class Task(db.Model):
             return doc, doc["scores"], doc["task"]["delay"]
         return None, None, None
 
-    def get_all_rank(self):
+    def get_all_rank(self, page_num=1, page_size=10):
         group = self.get_mongo_group()
-        doc_list = list(group.find())
-        return sorted(doc_list, key=lambda d: d["sum"], reverse=True)
+        ranks = group.find().skip((page_size-1) * page_num).limit(page_size).sort("sum", -1)
+        count = group.count()
+        page = count // 10
+        if count % page_size:
+            page += 1
+        return ranks, page, count
 
     def get_doc_rank(self, doc_id):
         group = self.get_mongo_group()

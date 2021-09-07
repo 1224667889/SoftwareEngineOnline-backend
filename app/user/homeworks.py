@@ -129,3 +129,34 @@ def check_homework_student(login_user: User, task_id):
     return serialization.make_resp({
         "url": doc["task"]["url"],
     }, code=200)
+
+
+# 查询所有分块得分 - 普通用户需要等待公示
+@user.route("/homework/<string:task_id>/<string:split_id>/scores", methods=['GET'])
+@login_required("SuperAdmin", "Admin", "Student")
+def homework_split_rank(login_user: User, task_id, split_id):
+    page_number = request.args.get('page_number', 1, type=int)
+    page_size = request.args.get('page_size', 10, type=int)
+    task = homeworks.find_by_id(task_id)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    if task.get_status() < 3:
+        return serialization.make_resp({"error_msg": "结果未开放"}, code=401)
+    if split_id == "0":
+        sp = task.splits.first()
+    else:
+        sp = task.splits.filter_by(id=split_id).first()
+    if not sp:
+        return serialization.make_resp({"error_msg": "分块不存在"}, code=404)
+    ranks = []
+    docs, page, num = sp.get_mongo_some_doc_finished(page_number, page_size)
+    for doc in docs:
+        ranks.append({
+            "score": doc["scores"][f"{sp.id}"],
+            "id": doc["id"]
+        })
+    return serialization.make_resp({
+        "num": num,
+        "page": page,
+        "ranks": ranks,
+    }, code=200)
