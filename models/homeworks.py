@@ -377,7 +377,7 @@ class Task(db.Model):
 
     def get_all_rank(self, page_num=1, page_size=10):
         group = self.get_mongo_group()
-        ranks = group.find().skip((page_size-1) * page_num).limit(page_size).sort("sum", -1)
+        ranks = group.find().skip((page_num-1) * page_size).limit(page_size).sort("sum", -1)
         count = group.count()
         page = count // 10
         if count % page_size:

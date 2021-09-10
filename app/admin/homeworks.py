@@ -183,8 +183,9 @@ def homework_split_rank_admin(login_user: User, task_id, split_id):
     for doc in docs:
         score_list = []
         for k, v in doc["scores"].items():
-            v["id"] = k
-            score_list.append(v)
+            if int(k) in [score.id for score in sp.scores]:
+                v["id"] = k
+                score_list.append(v)
         ranks.append({
             "score": score_list,
             "sum": doc["sum"],
