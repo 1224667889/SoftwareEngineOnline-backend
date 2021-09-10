@@ -46,7 +46,7 @@ def homework_index(login_user: User):
     tasks, total_page, num = homeworks.find_by_team_type_page(team_type, page_number, page_size, keyword, False)
     return serialization.make_resp(
         {
-            "tasks": [task.get_index() for task in tasks],
+            "tasks": [task.get_index_safe() for task in tasks],
             "total_page": total_page,
             "num": num
         },
@@ -79,8 +79,12 @@ def homework_score_student(login_user: User, task_id):
     doc, scores, delay = task.get_doc_scores(task_team.id)
     if not scores:
         return serialization.make_resp({"error_msg": "未找到作业记录"}, code=404)
+    safe_scores_list = list(scores.values())
+    for s in safe_scores_list:
+        s.pop("referee")
+        s.pop("mark_at")
     return serialization.make_resp({
-        "scores": list(scores.values()),
+        "scores": safe_scores_list,
         "delay": int(delay),
         "max": doc["max"],
         "sum": doc["sum"],
@@ -102,9 +106,13 @@ def homework_rank_student(login_user: User, task_id):
     doc, scores, delay, rank_num, total_num = task.get_doc_rank(task_team.id)
     if not doc:
         return serialization.make_resp({"error_msg": "未找到作业记录"}, code=404)
+    safe_scores_list = list(scores.values())
+    for s in safe_scores_list:
+        s.pop("referee")
+        s.pop("mark_at")
     return serialization.make_resp({
         "title": task.title,
-        "scores": list(scores.values()),
+        "scores": safe_scores_list,
         "rank_num": rank_num + 1,
         "total_num": total_num,
         "delay": int(delay),
@@ -156,6 +164,8 @@ def homework_split_rank(login_user: User, task_id, split_id):
         for k, v in doc["scores"].items():
             if int(k) in [score.id for score in sp.scores]:
                 v["id"] = k
+                v.pop("referee")
+                v.pop("mark_at")
                 score_list.append(v)
         ranks.append({
             "score": score_list,
@@ -166,5 +176,37 @@ def homework_split_rank(login_user: User, task_id, split_id):
     return serialization.make_resp({
         "num": num,
         "page": page,
+        "ranks": ranks,
+    }, code=200)
+
+
+# 查询所有排名 - 普通用户需要等待公示
+@user.route("/homework/<string:task_id>/rank/all", methods=['GET'])
+@login_required("SuperAdmin", "Admin", "Student")
+def homework_rank_user(login_user: User, task_id):
+    page_size = request.args.get('page_size', 10, type=int)
+    page_number = request.args.get('page_number', 1, type=int)
+    task = homeworks.find_by_id(task_id)
+    if not task:
+        return serialization.make_resp({"error_msg": "作业不存在"}, code=404)
+    if task.get_status() < 3:
+        return serialization.make_resp({"error_msg": "结果未开放"}, code=401)
+    ranks = []
+    docs, page, num = task.get_all_rank(page_number, page_size)
+    for doc in docs:
+        safe_scores_list = list(doc["scores"].values())
+        for s in safe_scores_list:
+            s.pop("referee")
+            s.pop("mark_at")
+        ranks.append({
+            "id": doc["id"],
+            "max": doc["max"],
+            "sum": doc["sum"],
+            "scores": safe_scores_list,
+            "delay": doc["task"]["delay"]
+        })
+    return serialization.make_resp({
+        "num": num,
+        "total_page": page,
         "ranks": ranks,
     }, code=200)

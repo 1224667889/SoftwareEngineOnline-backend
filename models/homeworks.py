@@ -284,6 +284,15 @@ class Task(db.Model):
             "all": self.count_mongo(),
         }
 
+    def get_index_safe(self):
+        return {
+            "id": self.id,
+            "title": self.title,
+            "begin_at": datetime.datetime.timestamp(self.begin_at),
+            "deadline": datetime.datetime.timestamp(self.deadline),
+            "state": self.get_status(),
+        }
+
     def get_due(self):
         if self.team_type == 0:
             auth = db.session.query(Auth).filter_by(name="Student").first()
