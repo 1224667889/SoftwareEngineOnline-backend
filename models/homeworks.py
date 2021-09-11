@@ -388,7 +388,7 @@ class Task(db.Model):
         group = self.get_mongo_group()
         ranks = group.find().skip((page_num-1) * page_size).limit(page_size).sort("sum", -1)
         count = group.count()
-        page = count // 10
+        page = count // page_size
         if count % page_size:
             page += 1
         return ranks, page, count
@@ -398,9 +398,11 @@ class Task(db.Model):
         doc = group.find_one({"id": doc_id})
         if not doc:
             return None, None, None, None, None
-        doc_list = list(group.find())
-        doc_list = sorted(doc_list, key=lambda d: d["sum"], reverse=True)
-        return doc, doc["scores"], doc["task"]["delay"], doc_list.index(doc), len(doc_list)
+        return doc, \
+               doc["scores"], \
+               doc["task"]["delay"], \
+               group.find({'sum': {'$gt': doc['sum']}}).count(), \
+               group.count()
 
     def get_all_scores(self):
         group = self.get_mongo_group()
