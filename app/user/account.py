@@ -17,6 +17,13 @@ def user_login():
     return users.login(student_id, password)
 
 
+# 用户鉴权 - 分布式系统
+@user.route('/jwt', methods=['GET'])
+@login_required("SuperAdmin", "Admin", "Student")
+def user_jwt(login_user: User):
+    return serialization.make_resp({"detail": login_user.get_msg()}, code=200)
+
+
 # 刷新token
 @user.route('/token', methods=['PUT'])
 @login_required("SuperAdmin", "Admin", "Student")
